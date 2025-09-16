@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Dynamic Control Panel Editor</title>
+<title>Simple Editor with Dynamic Control Panel</title>
 <style>
   body {
     margin: 0;
@@ -70,14 +70,14 @@
     padding: 10px;
     display: none;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
   }
   .control-panel label {
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  .control-panel input {
+  .control-panel input[type=range] {
     flex: 1;
     margin-left: 10px;
   }
@@ -108,7 +108,6 @@ const progress = document.getElementById("progressBar");
 const panel = document.getElementById("controlPanel");
 const codeArea = document.getElementById("code");
 
-// Store dynamic controls
 let controls = [];
 
 function runCode() {
@@ -140,54 +139,50 @@ function updateLines() {
 }
 
 // -----------------------
-// Dynamic Control Panel
+// Dynamic slider controls
 // -----------------------
 function generateControls() {
-  panel.innerHTML = ''; // clear previous controls
+  panel.innerHTML = '<p><strong>Adjustable values will appear here after Run</strong></p>';
   controls = [];
 
-  // Simple pattern: detect numbers assigned to variables
-  // Example: var size = 100; or let speed = 5;
-  const regex = /(?:var|let|const)?\s*(\w+)\s*=\s*(\d+\.?\d*)/g;
+  const regex = /let\s+(\w+)\s*=\s*(\d+\.?\d*)/g;
   let match;
   while ((match = regex.exec(codeArea.value)) !== null) {
     const varName = match[1];
     const value = match[2];
 
-    // Create control
     const label = document.createElement('label');
-    label.innerText = varName + ': ';
-    const input = document.createElement('input');
-    input.type = 'number';
-    input.value = value;
-    input.dataset.var = varName;
+    label.innerText = varName + ':';
+
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = 0;
+    slider.max = 300;
+    slider.value = value;
+    slider.dataset.var = varName;
 
     const span = document.createElement('span');
     span.innerText = value;
 
-    label.appendChild(input);
+    label.appendChild(slider);
     label.appendChild(span);
     panel.appendChild(label);
 
-    // Store reference
-    controls.push({varName, input, span});
+    controls.push({varName, slider, span});
   }
 
-  // Update preview when value changes
   controls.forEach(ctrl => {
-    ctrl.input.oninput = () => {
-      ctrl.span.innerText = ctrl.input.value;
-      updatePreviewVariables(ctrl.varName, ctrl.input.value);
+    ctrl.slider.oninput = () => {
+      ctrl.span.innerText = ctrl.slider.value;
+      updatePreview(ctrl.varName, ctrl.slider.value);
     };
   });
 }
 
-// Simple live update in preview by replacing all variable assignments
-function updatePreviewVariables(varName, value) {
+function updatePreview(varName, value) {
   let code = codeArea.value;
-  // Replace first assignment of this variable
-  const regex = new RegExp(`(var|let|const)?\\s*${varName}\\s*=\\s*\\d+\\.?\\d*`);
-  code = code.replace(regex, `${varName}=${value}`);
+  const regex = new RegExp(`let\\s+${varName}\\s*=\\s*\\d+\\.?\\d*`);
+  code = code.replace(regex, `let ${varName}=${value}`);
   preview.srcdoc = code;
 }
 
