@@ -40,20 +40,21 @@
       width: 50%;
       border: none;
     }
-    .run-btn {
+    .run-btn, .clear-btn {
       position: absolute;
       top: 10px;
-      left: 10px;
       padding: 6px 12px;
-      background: #4caf50;
       color: white;
       border: none;
       cursor: pointer;
     }
+    .run-btn { left: 10px; background: #4caf50; }
+    .clear-btn { left: 100px; background: #f44336; }
   </style>
 </head>
 <body>
   <button class="run-btn" onclick="runCode()">Run</button>
+  <button class="clear-btn" onclick="clearCode()">Clear</button>
   <div class="editor">
     <div class="lines" id="lineNumbers">1</div>
     <textarea id="code" oninput="updateLines()" spellcheck="false"></textarea>
@@ -64,6 +65,11 @@
     function runCode() {
       const code = document.getElementById("code").value;
       document.getElementById("preview").srcdoc = code;
+    }
+
+    function clearCode() {
+      document.getElementById("code").value = '';
+      updateLines(); // update line numbers after clearing
     }
 
     function updateLines() {
