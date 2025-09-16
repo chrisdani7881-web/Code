@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Simple Editor with Sliders</title>
+<title>Editor with Dual Previews</title>
 <style>
   body {
     margin: 0;
@@ -16,7 +16,7 @@
     background: #1e1e1e;
     color: #ddd;
     overflow: hidden;
-    height: 35%;
+    height: 30%;
   }
   .lines {
     background: #2b2b2b;
@@ -38,8 +38,9 @@
   }
   iframe {
     width: 100%;
-    height: 30%;
+    height: 20%;
     border: none;
+    margin-bottom: 10px;
   }
   .run-btn, .clear-btn {
     position: absolute;
@@ -83,7 +84,7 @@
   .control-panel input[type=range] {
     flex: 2;
     -webkit-appearance: none;
-    height: 40px; /* mobile-friendly */
+    height: 40px;
     background: #444;
     border-radius: 8px;
     outline: none;
@@ -120,26 +121,41 @@
     <div class="progress-bar" id="progressBar"></div>
   </div>
 
+  <!-- First preview: exact code output -->
+  <iframe id="preview1"></iframe>
+
+  <!-- Control panel for second preview -->
   <div class="control-panel" id="controlPanel">
-    <p><strong>Adjustable values appear after Run</strong></p>
+    <p><strong>Adjustable values for second preview appear here</strong></p>
   </div>
 
-  <iframe id="preview"></iframe>
+  <!-- Second preview: sliders affect only this -->
+  <iframe id="preview2"></iframe>
 
 <script>
-const preview = document.getElementById("preview");
+const codeArea = document.getElementById("code");
+const preview1 = document.getElementById("preview1");
+const preview2 = document.getElementById("preview2");
 const progress = document.getElementById("progressBar");
 const panel = document.getElementById("controlPanel");
-const codeArea = document.getElementById("code");
+let controls = [];
+let secondPreviewCode = '';
 
 function runCode() {
   const code = codeArea.value;
   progress.style.width = '0%';
-  preview.srcdoc = code;
-  panel.style.display = 'flex';
-  panel.innerHTML = '<p><strong>Adjustable values appear after Run</strong></p>';
+  
+  // First preview shows code as-is
+  preview1.srcdoc = code;
 
-  preview.onload = () => {
+  // Setup second preview
+  secondPreviewCode = code; // copy for slider adjustments
+  preview2.srcdoc = secondPreviewCode;
+
+  panel.style.display = 'flex';
+  panel.innerHTML = '<p><strong>Adjustable values for second preview appear here</strong></p>';
+
+  preview1.onload = preview2.onload = () => {
     progress.style.width = '100%';
     generateSliders();
   };
@@ -150,7 +166,10 @@ function clearCode() {
   updateLines();
   progress.style.width = '0%';
   panel.style.display = 'none';
-  panel.innerHTML = '<p><strong>Adjustable values appear after Run</strong></p>';
+  panel.innerHTML = '<p><strong>Adjustable values for second preview appear here</strong></p>';
+  preview1.srcdoc = '';
+  preview2.srcdoc = '';
+  controls = [];
 }
 
 function updateLines() {
@@ -161,6 +180,9 @@ function updateLines() {
 }
 
 function generateSliders() {
+  panel.innerHTML = '<p><strong>Adjustable values for second preview appear here</strong></p>';
+  controls = [];
+
   const regex = /let\s+(\w+)\s*=\s*(\d+\.?\d*)/g;
   let match;
   while ((match = regex.exec(codeArea.value)) !== null) {
@@ -179,9 +201,18 @@ function generateSliders() {
     slider.max = 300;
     slider.value = value;
 
+    slider.oninput = () => {
+      // Update only second preview, not the original code
+      const regexVar = new RegExp(`let\\s+${varName}\\s*=\\s*\\d+\\.?\\d*`);
+      secondPreviewCode = secondPreviewCode.replace(regexVar, `let ${varName}=${slider.value}`);
+      preview2.srcdoc = secondPreviewCode;
+    };
+
     div.appendChild(label);
     div.appendChild(slider);
     panel.appendChild(div);
+
+    controls.push({varName, slider});
   }
 }
 
