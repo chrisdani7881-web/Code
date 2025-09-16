@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Simple Editor with Plus/Minus Controls</title>
+<title>Simple Editor with Sliders</title>
 <style>
   body {
     margin: 0;
@@ -77,18 +77,33 @@
     align-items: center;
     gap: 10px;
   }
-  .control button {
-    background: #555;
-    color: white;
-    border: none;
-    padding: 2px 8px;
-    cursor: pointer;
-    font-size: 16px;
+  .control-panel label {
+    flex: 1;
   }
-  .control span {
-    min-width: 30px;
-    display: inline-block;
-    text-align: center;
+  .control-panel input[type=range] {
+    flex: 2;
+    -webkit-appearance: none;
+    height: 40px; /* mobile-friendly */
+    background: #444;
+    border-radius: 8px;
+    outline: none;
+    touch-action: pan-x;
+  }
+  .control-panel input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 40px;
+    width: 40px;
+    background: #e74c3c;
+    border-radius: 50%;
+    cursor: pointer;
+    margin-top: -10px;
+  }
+  .control-panel input[type=range]::-moz-range-thumb {
+    height: 40px;
+    width: 40px;
+    background: #e74c3c;
+    border-radius: 50%;
+    cursor: pointer;
   }
 </style>
 </head>
@@ -106,7 +121,7 @@
   </div>
 
   <div class="control-panel" id="controlPanel">
-    <p><strong>Adjustable values will appear here after Run</strong></p>
+    <p><strong>Adjustable values appear after Run</strong></p>
   </div>
 
   <iframe id="preview"></iframe>
@@ -117,17 +132,16 @@ const progress = document.getElementById("progressBar");
 const panel = document.getElementById("controlPanel");
 const codeArea = document.getElementById("code");
 
-let controls = [];
-
 function runCode() {
   const code = codeArea.value;
   progress.style.width = '0%';
   preview.srcdoc = code;
   panel.style.display = 'flex';
+  panel.innerHTML = '<p><strong>Adjustable values appear after Run</strong></p>';
 
   preview.onload = () => {
     progress.style.width = '100%';
-    generateControls();
+    generateSliders();
   };
 }
 
@@ -136,8 +150,7 @@ function clearCode() {
   updateLines();
   progress.style.width = '0%';
   panel.style.display = 'none';
-  panel.innerHTML = '<p><strong>Adjustable values will appear here after Run</strong></p>';
-  controls = [];
+  panel.innerHTML = '<p><strong>Adjustable values appear after Run</strong></p>';
 }
 
 function updateLines() {
@@ -147,62 +160,29 @@ function updateLines() {
   lineNumbers.innerText = Array.from({length: lineCount}, (_, i) => i + 1).join("\n");
 }
 
-// -----------------------
-// Plus/Minus Controls
-// -----------------------
-function generateControls() {
-  panel.innerHTML = '<p><strong>Adjustable values will appear here after Run</strong></p>';
-  controls = [];
-
+function generateSliders() {
   const regex = /let\s+(\w+)\s*=\s*(\d+\.?\d*)/g;
   let match;
   while ((match = regex.exec(codeArea.value)) !== null) {
     const varName = match[1];
-    const value = parseInt(match[2], 10);
+    const value = match[2];
 
-    const controlDiv = document.createElement('div');
-    controlDiv.className = 'control';
+    const div = document.createElement('div');
+    div.className = 'control';
 
-    const label = document.createElement('span');
+    const label = document.createElement('label');
     label.innerText = varName + ':';
 
-    const minusBtn = document.createElement('button');
-    minusBtn.innerText = '-';
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = 0;
+    slider.max = 300;
+    slider.value = value;
 
-    const valueSpan = document.createElement('span');
-    valueSpan.innerText = value;
-
-    const plusBtn = document.createElement('button');
-    plusBtn.innerText = '+';
-
-    controlDiv.appendChild(label);
-    controlDiv.appendChild(minusBtn);
-    controlDiv.appendChild(valueSpan);
-    controlDiv.appendChild(plusBtn);
-    panel.appendChild(controlDiv);
-
-    controls.push({varName, valueSpan});
-
-    minusBtn.addEventListener('click', () => adjustValue(varName, -1));
-    plusBtn.addEventListener('click', () => adjustValue(varName, 1));
+    div.appendChild(label);
+    div.appendChild(slider);
+    panel.appendChild(div);
   }
-}
-
-function adjustValue(varName, delta) {
-  let code = codeArea.value;
-  const regex = new RegExp(`let\\s+${varName}\\s*=\\s*\\d+`);
-  code = code.replace(regex, (match) => {
-    let currentVal = parseInt(match.split('=')[1]);
-    let newVal = currentVal + delta;
-    // Update the value span
-    controls.forEach(ctrl => {
-      if (ctrl.varName === varName) ctrl.valueSpan.innerText = newVal;
-    });
-    return `let ${varName}=${newVal}`;
-  });
-  codeArea.value = code;
-  updateLines();
-  preview.srcdoc = code;
 }
 
 updateLines();
