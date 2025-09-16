@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Simple Editor with Dynamic Control Panel</title>
+<title>Simple Editor with Plus/Minus Controls</title>
 <style>
   body {
     margin: 0;
@@ -72,37 +72,23 @@
     flex-direction: column;
     gap: 10px;
   }
-  .control-panel label {
+  .control-panel .control {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 10px;
   }
-
-  /* Smooth mobile-friendly sliders */
-  .control-panel input[type=range] {
-    -webkit-appearance: none;
-    width: 100%;
-    height: 40px;           /* bigger for touch */
-    background: #444;
-    border-radius: 8px;
-    outline: none;
-    touch-action: pan-x;
-  }
-  .control-panel input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    height: 40px;
-    width: 40px;
-    background: #e74c3c;
-    border-radius: 50%;
+  .control button {
+    background: #555;
+    color: white;
+    border: none;
+    padding: 2px 8px;
     cursor: pointer;
-    margin-top: -10px; /* center on track */
+    font-size: 16px;
   }
-  .control-panel input[type=range]::-moz-range-thumb {
-    height: 40px;
-    width: 40px;
-    background: #e74c3c;
-    border-radius: 50%;
-    cursor: pointer;
+  .control span {
+    min-width: 30px;
+    display: inline-block;
+    text-align: center;
   }
 </style>
 </head>
@@ -162,7 +148,7 @@ function updateLines() {
 }
 
 // -----------------------
-// Dynamic slider controls
+// Plus/Minus Controls
 // -----------------------
 function generateControls() {
   panel.innerHTML = '<p><strong>Adjustable values will appear here after Run</strong></p>';
@@ -172,40 +158,50 @@ function generateControls() {
   let match;
   while ((match = regex.exec(codeArea.value)) !== null) {
     const varName = match[1];
-    const value = match[2];
+    const value = parseInt(match[2], 10);
 
-    const label = document.createElement('label');
+    const controlDiv = document.createElement('div');
+    controlDiv.className = 'control';
+
+    const label = document.createElement('span');
     label.innerText = varName + ':';
 
-    const slider = document.createElement('input');
-    slider.type = 'range';
-    slider.min = 0;
-    slider.max = 300;
-    slider.value = value;
-    slider.dataset.var = varName;
+    const minusBtn = document.createElement('button');
+    minusBtn.innerText = '-';
 
-    const span = document.createElement('span');
-    span.innerText = value;
+    const valueSpan = document.createElement('span');
+    valueSpan.innerText = value;
 
-    label.appendChild(slider);
-    label.appendChild(span);
-    panel.appendChild(label);
+    const plusBtn = document.createElement('button');
+    plusBtn.innerText = '+';
 
-    controls.push({varName, slider, span});
+    controlDiv.appendChild(label);
+    controlDiv.appendChild(minusBtn);
+    controlDiv.appendChild(valueSpan);
+    controlDiv.appendChild(plusBtn);
+    panel.appendChild(controlDiv);
+
+    controls.push({varName, valueSpan});
+
+    minusBtn.addEventListener('click', () => adjustValue(varName, -1));
+    plusBtn.addEventListener('click', () => adjustValue(varName, 1));
   }
-
-  controls.forEach(ctrl => {
-    ctrl.slider.addEventListener("input", () => {
-      ctrl.span.innerText = ctrl.slider.value;
-      updatePreview(ctrl.varName, ctrl.slider.value);
-    });
-  });
 }
 
-function updatePreview(varName, value) {
+function adjustValue(varName, delta) {
   let code = codeArea.value;
-  const regex = new RegExp(`let\\s+${varName}\\s*=\\s*\\d+\\.?\\d*`);
-  code = code.replace(regex, `let ${varName}=${value}`);
+  const regex = new RegExp(`let\\s+${varName}\\s*=\\s*\\d+`);
+  code = code.replace(regex, (match) => {
+    let currentVal = parseInt(match.split('=')[1]);
+    let newVal = currentVal + delta;
+    // Update the value span
+    controls.forEach(ctrl => {
+      if (ctrl.varName === varName) ctrl.valueSpan.innerText = newVal;
+    });
+    return `let ${varName}=${newVal}`;
+  });
+  codeArea.value = code;
+  updateLines();
   preview.srcdoc = code;
 }
 
