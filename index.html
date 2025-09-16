@@ -78,29 +78,28 @@
     align-items: center;
   }
 
-  /* Mobile-friendly slider */
+  /* Smooth mobile-friendly sliders */
   .control-panel input[type=range] {
     -webkit-appearance: none;
     width: 100%;
-    height: 30px;        /* taller for touch */
-    margin-left: 10px;
+    height: 40px;           /* bigger for touch */
     background: #444;
     border-radius: 8px;
     outline: none;
-    touch-action: pan-x; /* improve mobile dragging */
+    touch-action: pan-x;
   }
   .control-panel input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    height: 30px;
-    width: 30px;
+    height: 40px;
+    width: 40px;
     background: #e74c3c;
     border-radius: 50%;
     cursor: pointer;
-    margin-top: -8px; /* center thumb on track */
+    margin-top: -10px; /* center on track */
   }
   .control-panel input[type=range]::-moz-range-thumb {
-    height: 30px;
-    width: 30px;
+    height: 40px;
+    width: 40px;
     background: #e74c3c;
     border-radius: 50%;
     cursor: pointer;
@@ -196,10 +195,10 @@ function generateControls() {
   }
 
   controls.forEach(ctrl => {
-    ctrl.slider.oninput = () => {
+    ctrl.slider.addEventListener("input", () => {
       ctrl.span.innerText = ctrl.slider.value;
       updatePreview(ctrl.varName, ctrl.slider.value);
-    };
+    });
   });
 }
 
