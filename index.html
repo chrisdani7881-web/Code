@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Editor with Smooth Sliders</title>
+<title>Default Editor with Smooth Sliders</title>
 <style>
   body {
     margin: 0;
@@ -81,10 +81,12 @@
   .control-panel label {
     flex: 1;
   }
+
+  /* Smooth mobile-friendly slider styling */
   .control-panel input[type=range] {
     flex: 2;
     -webkit-appearance: none;
-    height: 40px; /* large for touch */
+    height: 40px;
     background: #444;
     border-radius: 8px;
     outline: none;
@@ -121,7 +123,7 @@
     <div class="progress-bar" id="progressBar"></div>
   </div>
 
-  <!-- First preview: exact code output -->
+  <!-- First preview: shows raw code output -->
   <iframe id="preview1"></iframe>
 
   <!-- Control panel for second preview -->
@@ -129,7 +131,7 @@
     <p><strong>Adjustable values for second preview appear here</strong></p>
   </div>
 
-  <!-- Second preview: sliders affect only this -->
+  <!-- Second preview: sliders affect this -->
   <iframe id="preview2"></iframe>
 
 <script>
@@ -148,7 +150,7 @@ function runCode() {
   // First preview shows code as-is
   preview1.srcdoc = code;
 
-  // Setup second preview
+  // Second preview also uses code initially
   secondPreviewCode = code;
   preview2.srcdoc = secondPreviewCode;
 
@@ -183,6 +185,7 @@ function generateSliders() {
   panel.innerHTML = '<p><strong>Adjustable values for second preview appear here</strong></p>';
   controls = [];
 
+  // Detect all let variables with numeric values
   const regex = /let\s+(\w+)\s*=\s*(\d+\.?\d*)/g;
   let match;
   while ((match = regex.exec(codeArea.value)) !== null) {
@@ -202,7 +205,6 @@ function generateSliders() {
     slider.value = value;
 
     slider.oninput = () => {
-      // Update only second preview
       const regexVar = new RegExp(`let\\s+${varName}\\s*=\\s*\\d+\\.?\\d*`);
       secondPreviewCode = secondPreviewCode.replace(regexVar, `let ${varName}=${slider.value}`);
       preview2.srcdoc = secondPreviewCode;
