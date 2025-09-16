@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Simple Code Editor</title>
+<title>Simple Editor with Static Control Panel</title>
 <style>
   body {
     margin: 0;
@@ -18,7 +18,7 @@
     background: #1e1e1e;
     color: #ddd;
     overflow: hidden;
-    height: 35%;
+    height: 30%;
   }
   .lines {
     background: #2b2b2b;
@@ -54,8 +54,53 @@
   /* Preview */
   iframe {
     width: 100%;
-    height: 65%;
+    height: 35%;
     border: none;
+    margin-top: 10px;
+  }
+
+  /* Control panel */
+  .control-panel {
+    background: #222;
+    color: #ddd;
+    padding: 10px;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .control-panel .control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .control-panel label {
+    flex: 1;
+  }
+
+  .control-panel input[type=range] {
+    flex: 2;
+    -webkit-appearance: none;
+    height: 30px;
+    background: #444;
+    border-radius: 8px;
+    outline: none;
+    touch-action: pan-x;
+  }
+  .control-panel input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 30px;
+    width: 30px;
+    background: #e74c3c;
+    border-radius: 50%;
+    cursor: pointer;
+    margin-top: -8px;
+  }
+  .control-panel input[type=range]::-moz-range-thumb {
+    height: 30px;
+    width: 30px;
+    background: #e74c3c;
+    border-radius: 50%;
+    cursor: pointer;
   }
 </style>
 </head>
@@ -69,22 +114,73 @@
     <textarea id="code" oninput="updateLines()" spellcheck="false"></textarea>
   </div>
 
+  <!-- Control panel -->
+  <div class="control-panel" id="controlPanel">
+    <p><strong>Adjustable values appear here after Run</strong></p>
+  </div>
+
   <!-- Preview -->
   <iframe id="preview"></iframe>
 
 <script>
 const codeArea = document.getElementById("code");
 const preview = document.getElementById("preview");
+const panel = document.getElementById("controlPanel");
+
+// Keep track of slider controls
+let controls = [];
+let previewCode = '';
 
 function runCode() {
-  const code = codeArea.value;
-  preview.srcdoc = code;
+  previewCode = codeArea.value;
+  preview.srcdoc = previewCode;
+
+  panel.style.display = 'flex';
+  panel.innerHTML = '<p><strong>Adjustable values appear here after Run</strong></p>';
+  controls = [];
+
+  // Parse code for numeric values declared with let
+  const regex = /let\s+(\w+)\s*=\s*(\d+\.?\d*)/g;
+  let match;
+  while ((match = regex.exec(codeArea.value)) !== null) {
+    const varName = match[1];
+    const value = parseFloat(match[2]);
+
+    const div = document.createElement('div');
+    div.className = 'control';
+
+    const label = document.createElement('label');
+    label.innerText = varName + ':';
+
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = 0;
+    slider.max = 300;
+    slider.value = value;
+
+    // Slider changes preview only, not code
+    slider.oninput = () => {
+      let updatedCode = previewCode.replace(
+        new RegExp(`let\\s+${varName}\\s*=\\s*\\d+\\.?\\d*`),
+        `let ${varName}=${slider.value}`
+      );
+      preview.srcdoc = updatedCode;
+    };
+
+    div.appendChild(label);
+    div.appendChild(slider);
+    panel.appendChild(div);
+    controls.push({varName, slider});
+  }
 }
 
 function clearCode() {
   codeArea.value = '';
   updateLines();
   preview.srcdoc = '';
+  panel.style.display = 'none';
+  panel.innerHTML = '<p><strong>Adjustable values appear here after Run</strong></p>';
+  controls = [];
 }
 
 function updateLines() {
