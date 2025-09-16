@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Simple Editor with Static Control Panel</title>
+<title>Simple Editor with PX Sliders</title>
 <style>
   body {
     margin: 0;
@@ -54,7 +54,7 @@
   /* Preview */
   iframe {
     width: 100%;
-    height: 35%;
+    height: 40%;
     border: none;
     margin-top: 10px;
   }
@@ -116,7 +116,7 @@
 
   <!-- Control panel -->
   <div class="control-panel" id="controlPanel">
-    <p><strong>Adjustable values appear here after Run</strong></p>
+    <p><strong>Adjustable values appear after Run</strong></p>
   </div>
 
   <!-- Preview -->
@@ -127,51 +127,50 @@ const codeArea = document.getElementById("code");
 const preview = document.getElementById("preview");
 const panel = document.getElementById("controlPanel");
 
-// Keep track of slider controls
-let controls = [];
-let previewCode = '';
+let originalCode = '';
 
 function runCode() {
-  previewCode = codeArea.value;
-  preview.srcdoc = previewCode;
+  originalCode = codeArea.value;
+  preview.srcdoc = originalCode;
 
   panel.style.display = 'flex';
-  panel.innerHTML = '<p><strong>Adjustable values appear here after Run</strong></p>';
-  controls = [];
+  panel.innerHTML = '<p><strong>Adjustable values appear after Run</strong></p>';
 
-  // Parse code for numeric values declared with let
-  const regex = /let\s+(\w+)\s*=\s*(\d+\.?\d*)/g;
-  let match;
-  while ((match = regex.exec(codeArea.value)) !== null) {
-    const varName = match[1];
-    const value = parseFloat(match[2]);
+  // Match all numbers ending with px
+  const regex = /(\d+\.?\d*)px/g;
+  let matches = [...originalCode.matchAll(regex)];
+
+  matches.forEach((match, index) => {
+    const value = parseFloat(match[1]);
+    const property = `px-${index+1}`; // generic label
 
     const div = document.createElement('div');
     div.className = 'control';
 
     const label = document.createElement('label');
-    label.innerText = varName + ':';
+    label.innerText = property + ':';
 
     const slider = document.createElement('input');
     slider.type = 'range';
     slider.min = 0;
-    slider.max = 300;
+    slider.max = 500;
     slider.value = value;
 
-    // Slider changes preview only, not code
     slider.oninput = () => {
-      let updatedCode = previewCode.replace(
-        new RegExp(`let\\s+${varName}\\s*=\\s*\\d+\\.?\\d*`),
-        `let ${varName}=${slider.value}`
-      );
+      let updatedCode = originalCode;
+      // Replace nth px value with slider value
+      let count = 0;
+      updatedCode = updatedCode.replace(/(\d+\.?\d*)px/g, (m, p1) => {
+        count++;
+        return (count === index + 1 ? slider.value : p1) + 'px';
+      });
       preview.srcdoc = updatedCode;
     };
 
     div.appendChild(label);
     div.appendChild(slider);
     panel.appendChild(div);
-    controls.push({varName, slider});
-  }
+  });
 }
 
 function clearCode() {
@@ -179,8 +178,7 @@ function clearCode() {
   updateLines();
   preview.srcdoc = '';
   panel.style.display = 'none';
-  panel.innerHTML = '<p><strong>Adjustable values appear here after Run</strong></p>';
-  controls = [];
+  panel.innerHTML = '<p><strong>Adjustable values appear after Run</strong></p>';
 }
 
 function updateLines() {
