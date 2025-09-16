@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Code Editor</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      height: 100vh;
+      font-family: monospace;
+    }
+    .editor {
+      width: 50%;
+      padding: 0;
+      display: flex;
+      background: #1e1e1e;
+      color: #ddd;
+      overflow: hidden;
+    }
+    .lines {
+      background: #2b2b2b;
+      padding: 5px;
+      text-align: right;
+      user-select: none;
+      color: #777;
+    }
+    textarea {
+      flex: 1;
+      border: none;
+      padding: 5px;
+      background: transparent;
+      color: inherit;
+      resize: none;
+      outline: none;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    iframe {
+      width: 50%;
+      border: none;
+    }
+    .run-btn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 6px 12px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <button class="run-btn" onclick="runCode()">Run</button>
+  <div class="editor">
+    <div class="lines" id="lineNumbers">1</div>
+    <textarea id="code" oninput="updateLines()" spellcheck="false">
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { background: lightblue; }
+    h1 { color: darkblue; }
+  </style>
+</head>
+<body>
+  <h1>Hello World</h1>
+  <p>This is a preview.</p>
+</body>
+</html>
+    </textarea>
+  </div>
+  <iframe id="preview"></iframe>
+
+  <script>
+    function runCode() {
+      const code = document.getElementById("code").value;
+      document.getElementById("preview").srcdoc = code;
+    }
+
+    function updateLines() {
+      const code = document.getElementById("code");
+      const lineNumbers = document.getElementById("lineNumbers");
+      const lineCount = code.value.split("\n").length;
+      lineNumbers.innerText = Array.from({length: lineCount}, (_, i) => i + 1).join("\n");
+    }
+
+    // initialize line numbers
+    updateLines();
+  </script>
+</body>
+</html>
