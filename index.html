@@ -1,50 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Simple Code Editor</title>
+<style>
+  body {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    font-family: monospace;
+  }
+
+  /* Editor area */
+  .editor {
+    display: flex;
+    background: #1e1e1e;
+    color: #ddd;
+    overflow: hidden;
+    height: 35%;
+  }
+  .lines {
+    background: #2b2b2b;
+    padding: 5px;
+    text-align: right;
+    user-select: none;
+    color: #777;
+  }
+  textarea {
+    flex: 1;
+    border: none;
+    padding: 5px;
+    background: transparent;
+    color: inherit;
+    resize: none;
+    outline: none;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* Buttons */
+  .run-btn, .clear-btn {
+    position: absolute;
+    top: 10px;
+    padding: 6px 12px;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  .run-btn { left: 10px; background: #4caf50; }
+  .clear-btn { left: 100px; background: #f44336; }
+
+  /* Preview */
+  iframe {
+    width: 100%;
+    height: 65%;
+    border: none;
+  }
+</style>
+</head>
+<body>
+  <button class="run-btn" onclick="runCode()">Run</button>
+  <button class="clear-btn" onclick="clearCode()">Clear</button>
+
+  <!-- Editor -->
+  <div class="editor">
+    <div class="lines" id="lineNumbers">1</div>
+    <textarea id="code" oninput="updateLines()" spellcheck="false"></textarea>
+  </div>
+
+  <!-- Preview -->
+  <iframe id="preview"></iframe>
+
 <script>
 const codeArea = document.getElementById("code");
-const preview1 = document.getElementById("preview1");
-const preview2 = document.getElementById("preview2");
-const progress = document.getElementById("progressBar");
-const panel = document.getElementById("controlPanel");
-let controls = [];
-let secondPreviewCode = '';
-
-// Debounce function for smooth slider updates
-function debounce(func, wait) {
-  let timeout;
-  return function (...args) {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func.apply(this, args), wait);
-  };
-}
+const preview = document.getElementById("preview");
 
 function runCode() {
   const code = codeArea.value;
-  progress.style.width = '0%';
-
-  // First preview shows raw code
-  preview1.srcdoc = code;
-
-  // Second preview uses code initially
-  secondPreviewCode = code;
-  preview2.srcdoc = secondPreviewCode;
-
-  panel.style.display = 'flex';
-  panel.innerHTML = '<p><strong>Adjustable values for second preview appear here</strong></p>';
-
-  preview1.onload = preview2.onload = () => {
-    progress.style.width = '100%';
-    generateSliders();
-  };
+  preview.srcdoc = code;
 }
 
 function clearCode() {
   codeArea.value = '';
   updateLines();
-  progress.style.width = '0%';
-  panel.style.display = 'none';
-  panel.innerHTML = '<p><strong>Adjustable values for second preview appear here</strong></p>';
-  preview1.srcdoc = '';
-  preview2.srcdoc = '';
-  controls = [];
+  preview.srcdoc = '';
 }
 
 function updateLines() {
@@ -54,43 +94,7 @@ function updateLines() {
   lineNumbers.innerText = Array.from({length: lineCount}, (_, i) => i + 1).join("\n");
 }
 
-function generateSliders() {
-  panel.innerHTML = '<p><strong>Adjustable values for second preview appear here</strong></p>';
-  controls = [];
-
-  const regex = /let\s+(\w+)\s*=\s*(\d+\.?\d*)/g;
-  let match;
-  while ((match = regex.exec(codeArea.value)) !== null) {
-    const varName = match[1];
-    const value = parseFloat(match[2]);
-
-    const div = document.createElement('div');
-    div.className = 'control';
-
-    const label = document.createElement('label');
-    label.innerText = varName + ':';
-
-    const slider = document.createElement('input');
-    slider.type = 'range';
-    slider.min = 0;
-    slider.max = 300;
-    slider.value = value;
-
-    // Smooth slider for second preview with debounce
-    slider.oninput = debounce(() => {
-      const regexVar = new RegExp(`let\\s+${varName}\\s*=\\s*\\d+\\.?\\d*`);
-      secondPreviewCode = secondPreviewCode.replace(regexVar, `let ${varName}=${slider.value}`);
-      preview2.srcdoc = secondPreviewCode;
-      slider.value = slider.value; // Ensure slider thumb stays at the new value
-    }, 100); // 100ms for smooth sliding
-
-    div.appendChild(label);
-    div.appendChild(slider);
-    panel.appendChild(div);
-
-    controls.push({varName, slider});
-  }
-}
-
 updateLines();
 </script>
+</body>
+</html>
