@@ -16,7 +16,7 @@
       background: #1e1e1e;
       color: #ddd;
       overflow: hidden;
-      flex: 1; /* Take remaining height */
+      height: 50%; /* Top half of screen */
     }
     .lines {
       background: #2b2b2b;
@@ -38,7 +38,7 @@
     }
     iframe {
       width: 100%;
-      height: 50%; /* Take top half of screen */
+      height: 50%; /* Bottom half of screen */
       border: none;
     }
     .run-btn, .clear-btn {
@@ -57,12 +57,12 @@
   <button class="run-btn" onclick="runCode()">Run</button>
   <button class="clear-btn" onclick="clearCode()">Clear</button>
 
-  <iframe id="preview"></iframe>
-
   <div class="editor">
     <div class="lines" id="lineNumbers">1</div>
     <textarea id="code" oninput="updateLines()" spellcheck="false"></textarea>
   </div>
+
+  <iframe id="preview"></iframe>
 
   <script>
     function runCode() {
@@ -72,7 +72,7 @@
 
     function clearCode() {
       document.getElementById("code").value = '';
-      updateLines(); // update line numbers after clearing
+      updateLines();
     }
 
     function updateLines() {
@@ -82,7 +82,6 @@
       lineNumbers.innerText = Array.from({length: lineCount}, (_, i) => i + 1).join("\n");
     }
 
-    // initialize line numbers
     updateLines();
   </script>
 </body>
