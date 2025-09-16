@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Editor with Dual Previews</title>
+<title>Editor with Smooth Sliders</title>
 <style>
   body {
     margin: 0;
@@ -84,7 +84,7 @@
   .control-panel input[type=range] {
     flex: 2;
     -webkit-appearance: none;
-    height: 40px;
+    height: 40px; /* large for touch */
     background: #444;
     border-radius: 8px;
     outline: none;
@@ -149,7 +149,7 @@ function runCode() {
   preview1.srcdoc = code;
 
   // Setup second preview
-  secondPreviewCode = code; // copy for slider adjustments
+  secondPreviewCode = code;
   preview2.srcdoc = secondPreviewCode;
 
   panel.style.display = 'flex';
@@ -202,7 +202,7 @@ function generateSliders() {
     slider.value = value;
 
     slider.oninput = () => {
-      // Update only second preview, not the original code
+      // Update only second preview
       const regexVar = new RegExp(`let\\s+${varName}\\s*=\\s*\\d+\\.?\\d*`);
       secondPreviewCode = secondPreviewCode.replace(regexVar, `let ${varName}=${slider.value}`);
       preview2.srcdoc = secondPreviewCode;
