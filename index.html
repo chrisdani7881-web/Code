@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Default Editor with Labeled Sliders</title>
+<title>Simple Editor with Numeric Sliders</title>
 <style>
   body {
     margin: 0;
@@ -77,7 +77,6 @@
     flex: 1;
   }
 
-  /* Slider styling */
   .control-panel input[type=range] {
     flex: 2;
     -webkit-appearance: none;
@@ -130,7 +129,6 @@ const panel = document.getElementById("controlPanel");
 
 let originalCode = '';
 
-// Run button
 function runCode() {
   originalCode = codeArea.value;
   preview.srcdoc = originalCode;
@@ -138,18 +136,19 @@ function runCode() {
   panel.style.display = 'flex';
   panel.innerHTML = '<p><strong>Adjustable values appear after Run</strong></p>';
 
-  // Match simple variable assignments like: let height = 100;
-  const regex = /let\s+(\w+)\s*=\s*(\d+\.?\d*)/g;
-  let match;
-  while ((match = regex.exec(originalCode)) !== null) {
-    const varName = match[1];
-    const value = match[2];
+  // Match all numeric values (integers or decimals)
+  const regex = /(\d+\.?\d*)/g;
+  let matches = [...originalCode.matchAll(regex)];
+
+  matches.forEach((match, index) => {
+    const value = parseFloat(match[1]);
+    const property = `value-${index+1}`; // generic label
 
     const div = document.createElement('div');
     div.className = 'control';
 
     const label = document.createElement('label');
-    label.innerText = varName + ':';
+    label.innerText = property + ':';
 
     const slider = document.createElement('input');
     slider.type = 'range';
@@ -159,18 +158,20 @@ function runCode() {
 
     slider.oninput = () => {
       let updatedCode = originalCode;
-      const pattern = new RegExp(`let\\s+${varName}\\s*=\\s*\\d+\\.?\\d*`);
-      updatedCode = updatedCode.replace(pattern, `let ${varName} = ${slider.value}`);
+      let count = 0;
+      updatedCode = updatedCode.replace(/(\d+\.?\d*)/g, (m) => {
+        count++;
+        return (count === index + 1 ? slider.value : m);
+      });
       preview.srcdoc = updatedCode;
     };
 
     div.appendChild(label);
     div.appendChild(slider);
     panel.appendChild(div);
-  }
+  });
 }
 
-// Clear button
 function clearCode() {
   codeArea.value = '';
   updateLines();
@@ -179,7 +180,6 @@ function clearCode() {
   panel.innerHTML = '<p><strong>Adjustable values appear after Run</strong></p>';
 }
 
-// Update line numbers
 function updateLines() {
   const code = codeArea.value;
   const lineNumbers = document.getElementById("lineNumbers");
