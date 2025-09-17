@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Editor with Variable Sliders</title>
+<title>Editor with Numeric Sliders</title>
 <style>
   body {
     margin: 0;
@@ -125,18 +125,25 @@ function runCode() {
 
   const lines = originalCode.split("\n");
 
+  let sliderCount = 0;
+
   lines.forEach((line, lineIndex) => {
-    // Look for variable assignments with numbers
-    const varMatch = line.match(/\b(let|const|var)\s+([a-zA-Z_$][\w$]*)\s*=\s*(\d+\.?\d*)/);
-    if (varMatch) {
-      const varName = varMatch[2];
-      const value = parseFloat(varMatch[3]);
+    // Match all numeric values in the line
+    const regex = /(\d+\.?\d*)/g;
+    let match;
+    while ((match = regex.exec(line)) !== null) {
+      sliderCount++;
+      const value = parseFloat(match[1]);
+      
+      // Try to detect variable name before the number
+      const varMatch = line.slice(0, match.index).match(/([a-zA-Z_$][\w$]*)\s*=?\s*$/);
+      const labelName = varMatch ? varMatch[1] : 'Value-' + sliderCount;
 
       const div = document.createElement('div');
       div.className = 'control';
 
       const label = document.createElement('label');
-      label.innerText = varName + ':';
+      label.innerText = labelName + ':';
 
       const slider = document.createElement('input');
       slider.type = 'range';
@@ -145,9 +152,10 @@ function runCode() {
       slider.value = value;
 
       slider.oninput = () => {
-        let updatedCode = [...lines];
-        updatedCode[lineIndex] = line.replace(/(\d+\.?\d*)/, slider.value);
-        preview.srcdoc = updatedCode.join("\n");
+        let updatedLine = line.replace(match[1], slider.value);
+        let updatedLines = [...lines];
+        updatedLines[lineIndex] = updatedLine;
+        preview.srcdoc = updatedLines.join("\n");
       };
 
       div.appendChild(label);
