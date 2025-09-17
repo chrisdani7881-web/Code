@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Simple Editor with Variable Sliders</title>
+<title>Editor with Variable Sliders</title>
 <style>
   body {
     margin: 0;
@@ -11,8 +11,6 @@
     height: 100vh;
     font-family: monospace;
   }
-
-  /* Editor area */
   .editor {
     display: flex;
     background: #1e1e1e;
@@ -38,8 +36,6 @@
     font-size: 14px;
     line-height: 1.5;
   }
-
-  /* Buttons */
   .run-btn, .clear-btn {
     position: absolute;
     top: 10px;
@@ -50,16 +46,12 @@
   }
   .run-btn { left: 10px; background: #4caf50; }
   .clear-btn { left: 100px; background: #f44336; }
-
-  /* Preview */
   iframe {
     width: 100%;
     height: 40%;
     border: none;
     margin-top: 10px;
   }
-
-  /* Control panel */
   .control-panel {
     background: #222;
     color: #ddd;
@@ -76,7 +68,6 @@
   .control-panel label {
     flex: 1;
   }
-
   .control-panel input[type=range] {
     flex: 2;
     -webkit-appearance: none;
@@ -105,22 +96,19 @@
 </style>
 </head>
 <body>
-  <button class="run-btn" onclick="runCode()">Run</button>
-  <button class="clear-btn" onclick="clearCode()">Clear</button>
+<button class="run-btn" onclick="runCode()">Run</button>
+<button class="clear-btn" onclick="clearCode()">Clear</button>
 
-  <!-- Editor -->
-  <div class="editor">
-    <div class="lines" id="lineNumbers">1</div>
-    <textarea id="code" oninput="updateLines()" spellcheck="false"></textarea>
-  </div>
+<div class="editor">
+  <div class="lines" id="lineNumbers">1</div>
+  <textarea id="code" oninput="updateLines()" spellcheck="false"></textarea>
+</div>
 
-  <!-- Control panel -->
-  <div class="control-panel" id="controlPanel">
-    <p><strong>Adjustable values appear after Run</strong></p>
-  </div>
+<div class="control-panel" id="controlPanel">
+  <p><strong>Adjustable values appear after Run</strong></p>
+</div>
 
-  <!-- Preview -->
-  <iframe id="preview"></iframe>
+<iframe id="preview"></iframe>
 
 <script>
 const codeArea = document.getElementById("code");
@@ -132,50 +120,40 @@ let originalCode = '';
 function runCode() {
   originalCode = codeArea.value;
   preview.srcdoc = originalCode;
-
   panel.style.display = 'flex';
   panel.innerHTML = '<p><strong>Adjustable values appear after Run</strong></p>';
 
-  // Match all numeric values (integers or decimals)
-  const regex = /(\d+\.?\d*)/g;
-  let matches = [...originalCode.matchAll(regex)];
+  const lines = originalCode.split("\n");
 
-  matches.forEach((match, index) => {
-    const value = parseFloat(match[1]);
-
-    // Attempt to detect variable name before the number
-    let varName = `value-${index+1}`;
-    const before = originalCode.slice(0, match.index);
-    const varMatch = before.match(/(?:let|const|var)\s+([a-zA-Z_$][\w$]*)\s*=\s*$/);
+  lines.forEach((line, lineIndex) => {
+    // Look for variable assignments with numbers
+    const varMatch = line.match(/\b(let|const|var)\s+([a-zA-Z_$][\w$]*)\s*=\s*(\d+\.?\d*)/);
     if (varMatch) {
-      varName = varMatch[1];
+      const varName = varMatch[2];
+      const value = parseFloat(varMatch[3]);
+
+      const div = document.createElement('div');
+      div.className = 'control';
+
+      const label = document.createElement('label');
+      label.innerText = varName + ':';
+
+      const slider = document.createElement('input');
+      slider.type = 'range';
+      slider.min = 0;
+      slider.max = 500;
+      slider.value = value;
+
+      slider.oninput = () => {
+        let updatedCode = [...lines];
+        updatedCode[lineIndex] = line.replace(/(\d+\.?\d*)/, slider.value);
+        preview.srcdoc = updatedCode.join("\n");
+      };
+
+      div.appendChild(label);
+      div.appendChild(slider);
+      panel.appendChild(div);
     }
-
-    const div = document.createElement('div');
-    div.className = 'control';
-
-    const label = document.createElement('label');
-    label.innerText = varName + ':';
-
-    const slider = document.createElement('input');
-    slider.type = 'range';
-    slider.min = 0;
-    slider.max = 500;
-    slider.value = value;
-
-    slider.oninput = () => {
-      let updatedCode = originalCode;
-      let count = 0;
-      updatedCode = updatedCode.replace(/(\d+\.?\d*)/g, (m) => {
-        count++;
-        return (count === index + 1 ? slider.value : m);
-      });
-      preview.srcdoc = updatedCode;
-    };
-
-    div.appendChild(label);
-    div.appendChild(slider);
-    panel.appendChild(div);
   });
 }
 
