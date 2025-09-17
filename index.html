@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Simple Editor with Numeric Sliders</title>
+<title>Simple Editor with Variable Sliders</title>
 <style>
   body {
     margin: 0;
@@ -142,13 +142,20 @@ function runCode() {
 
   matches.forEach((match, index) => {
     const value = parseFloat(match[1]);
-    const property = `value-${index+1}`; // generic label
+
+    // Attempt to detect variable name before the number
+    let varName = `value-${index+1}`;
+    const before = originalCode.slice(0, match.index);
+    const varMatch = before.match(/(?:let|const|var)\s+([a-zA-Z_$][\w$]*)\s*=\s*$/);
+    if (varMatch) {
+      varName = varMatch[1];
+    }
 
     const div = document.createElement('div');
     div.className = 'control';
 
     const label = document.createElement('label');
-    label.innerText = property + ':';
+    label.innerText = varName + ':';
 
     const slider = document.createElement('input');
     slider.type = 'range';
