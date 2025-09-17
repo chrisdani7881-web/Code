@@ -98,6 +98,12 @@
     border-radius: 50%;
     cursor: pointer;
   }
+
+  .value-display {
+    width: 50px;
+    text-align: right;
+    font-family: monospace;
+  }
 </style>
 </head>
 <body>
@@ -122,7 +128,7 @@ const panel = document.getElementById("controlPanel");
 
 let originalCode = '';
 let numberPositions = [];
-let sliderValues = []; // Keep current slider values
+let sliderValues = [];
 
 function runCode() {
   originalCode = codeArea.value;
@@ -142,7 +148,7 @@ function runCode() {
         startIndex: match.index,
         value: parseFloat(match[1])
       });
-      sliderValues.push(parseFloat(match[1])); // initial value
+      sliderValues.push(parseFloat(match[1]));
     }
   });
 
@@ -159,13 +165,19 @@ function runCode() {
     slider.max = 500;
     slider.value = sliderValues[index];
 
+    const valueDisplay = document.createElement('div');
+    valueDisplay.className = 'value-display';
+    valueDisplay.innerText = slider.value + ' px';
+
     slider.oninput = () => {
       sliderValues[index] = parseFloat(slider.value);
+      valueDisplay.innerText = slider.value + ' px';
       updatePreview();
     };
 
     div.appendChild(label);
     div.appendChild(slider);
+    div.appendChild(valueDisplay);
     panel.appendChild(div);
   });
 }
@@ -195,10 +207,4 @@ function updateLines() {
   const code = codeArea.value;
   const lineNumbers = document.getElementById("lineNumbers");
   const lineCount = code.split("\n").length;
-  lineNumbers.innerText = Array.from({length: lineCount}, (_, i) => i + 1).join("\n");
-}
-
-updateLines();
-</script>
-</body>
-</html>
+  lineNumbers.innerText = Array.from({length: lineCount}, (_, i) => i + 1).join("\n"_
