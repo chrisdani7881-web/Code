@@ -2,97 +2,24 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Editor with Numeric Sliders</title>
+<title>Editor with Line Number Sliders</title>
 <style>
-  body {
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    font-family: monospace;
-  }
-  .editor {
-    display: flex;
-    background: #1e1e1e;
-    color: #ddd;
-    overflow: hidden;
-    height: 30%;
-  }
-  .lines {
-    background: #2b2b2b;
-    padding: 5px;
-    text-align: right;
-    user-select: none;
-    color: #777;
-  }
-  textarea {
-    flex: 1;
-    border: none;
-    padding: 5px;
-    background: transparent;
-    color: inherit;
-    resize: none;
-    outline: none;
-    font-size: 14px;
-    line-height: 1.5;
-  }
-  .run-btn, .clear-btn {
-    position: absolute;
-    top: 10px;
-    padding: 6px 12px;
-    color: white;
-    border: none;
-    cursor: pointer;
-  }
-  .run-btn { left: 10px; background: #4caf50; }
-  .clear-btn { left: 100px; background: #f44336; }
-  iframe {
-    width: 100%;
-    height: 40%;
-    border: none;
-    margin-top: 10px;
-  }
-  .control-panel {
-    background: #222;
-    color: #ddd;
-    padding: 10px;
-    display: none;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .control-panel .control {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .control-panel label {
-    flex: 1;
-  }
+  body { margin:0; display:flex; flex-direction:column; height:100vh; font-family:monospace; }
+  .editor { display:flex; background:#1e1e1e; color:#ddd; overflow:hidden; height:30%; }
+  .lines { background:#2b2b2b; padding:5px; text-align:right; user-select:none; color:#777; }
+  textarea { flex:1; border:none; padding:5px; background:transparent; color:inherit; resize:none; outline:none; font-size:14px; line-height:1.5; }
+  .run-btn, .clear-btn { position:absolute; top:10px; padding:6px 12px; color:white; border:none; cursor:pointer; }
+  .run-btn { left:10px; background:#4caf50; }
+  .clear-btn { left:100px; background:#f44336; }
+  iframe { width:100%; height:40%; border:none; margin-top:10px; }
+  .control-panel { background:#222; color:#ddd; padding:10px; display:none; flex-direction:column; gap:10px; }
+  .control-panel .control { display:flex; align-items:center; gap:10px; }
+  .control-panel label { flex:1; }
   .control-panel input[type=range] {
-    flex: 2;
-    -webkit-appearance: none;
-    height: 30px;
-    background: #444;
-    border-radius: 8px;
-    outline: none;
-    touch-action: pan-x;
+    flex:2; -webkit-appearance:none; height:30px; background:#444; border-radius:8px; outline:none; touch-action:pan-x;
   }
-  .control-panel input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    height: 30px;
-    width: 30px;
-    background: #e74c3c;
-    border-radius: 50%;
-    cursor: pointer;
-    margin-top: -8px;
-  }
-  .control-panel input[type=range]::-moz-range-thumb {
-    height: 30px;
-    width: 30px;
-    background: #e74c3c;
-    border-radius: 50%;
-    cursor: pointer;
-  }
+  .control-panel input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; height:30px; width:30px; background:#e74c3c; border-radius:50%; cursor:pointer; margin-top:-8px; }
+  .control-panel input[type=range]::-moz-range-thumb { height:30px; width:30px; background:#e74c3c; border-radius:50%; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -116,34 +43,28 @@ const preview = document.getElementById("preview");
 const panel = document.getElementById("controlPanel");
 
 let originalCode = '';
+let sliders = [];
 
 function runCode() {
   originalCode = codeArea.value;
   preview.srcdoc = originalCode;
   panel.style.display = 'flex';
   panel.innerHTML = '<p><strong>Adjustable values appear after Run</strong></p>';
+  sliders = [];
 
-  const lines = originalCode.split("\n");
-
-  let sliderCount = 0;
+  const lines = originalCode.split('\n');
 
   lines.forEach((line, lineIndex) => {
-    // Match all numeric values in the line
     const regex = /(\d+\.?\d*)/g;
     let match;
     while ((match = regex.exec(line)) !== null) {
-      sliderCount++;
-      const value = parseFloat(match[1]);
-      
-      // Try to detect variable name before the number
-      const varMatch = line.slice(0, match.index).match(/([a-zA-Z_$][\w$]*)\s*=?\s*$/);
-      const labelName = varMatch ? varMatch[1] : 'Value-' + sliderCount;
+      const value = match[1];
+      const startIndex = originalCode.split('\n').slice(0,lineIndex).join('\n').length + (lineIndex>0?1:0) + match.index;
 
       const div = document.createElement('div');
       div.className = 'control';
-
       const label = document.createElement('label');
-      label.innerText = labelName + ':';
+      label.innerText = 'Line ' + (lineIndex + 1) + ':';
 
       const slider = document.createElement('input');
       slider.type = 'range';
@@ -151,11 +72,15 @@ function runCode() {
       slider.max = 500;
       slider.value = value;
 
+      sliders.push({startIndex, length: value.length, slider});
+
       slider.oninput = () => {
-        let updatedLine = line.replace(match[1], slider.value);
-        let updatedLines = [...lines];
-        updatedLines[lineIndex] = updatedLine;
-        preview.srcdoc = updatedLines.join("\n");
+        let updatedCode = originalCode.split('');
+        sliders.forEach(s => {
+          const valStr = s === sliders[sliders.indexOf(slider)] ? slider.value : originalCode.substr(s.startIndex, s.length);
+          updatedCode.splice(s.startIndex, s.length, ...valStr);
+        });
+        preview.srcdoc = updatedCode.join('');
       };
 
       div.appendChild(label);
@@ -171,6 +96,7 @@ function clearCode() {
   preview.srcdoc = '';
   panel.style.display = 'none';
   panel.innerHTML = '<p><strong>Adjustable values appear after Run</strong></p>';
+  sliders = [];
 }
 
 function updateLines() {
