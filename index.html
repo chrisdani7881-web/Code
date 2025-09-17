@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Simple Editor with Line Number Sliders</title>
+<title>Simple Editor with Cumulative Sliders</title>
 <style>
   body {
     margin: 0;
@@ -101,19 +101,19 @@
 </style>
 </head>
 <body>
-  <button class="run-btn" onclick="runCode()">Run</button>
-  <button class="clear-btn" onclick="clearCode()">Clear</button>
+<button class="run-btn" onclick="runCode()">Run</button>
+<button class="clear-btn" onclick="clearCode()">Clear</button>
 
-  <div class="editor">
-    <div class="lines" id="lineNumbers">1</div>
-    <textarea id="code" oninput="updateLines()" spellcheck="false"></textarea>
-  </div>
+<div class="editor">
+  <div class="lines" id="lineNumbers">1</div>
+  <textarea id="code" oninput="updateLines()" spellcheck="false"></textarea>
+</div>
 
-  <div class="control-panel" id="controlPanel">
-    <p><strong>Adjustable values appear after Run</strong></p>
-  </div>
+<div class="control-panel" id="controlPanel">
+  <p><strong>Adjustable values appear after Run</strong></p>
+</div>
 
-  <iframe id="preview"></iframe>
+<iframe id="preview"></iframe>
 
 <script>
 const codeArea = document.getElementById("code");
@@ -121,7 +121,8 @@ const preview = document.getElementById("preview");
 const panel = document.getElementById("controlPanel");
 
 let originalCode = '';
-let numberPositions = []; // Track numbers and their positions
+let numberPositions = [];
+let sliderValues = []; // Keep current slider values
 
 function runCode() {
   originalCode = codeArea.value;
@@ -129,23 +130,22 @@ function runCode() {
   panel.style.display = 'flex';
   panel.innerHTML = '<p><strong>Adjustable values appear after Run</strong></p>';
   numberPositions = [];
+  sliderValues = [];
 
   const lines = originalCode.split('\n');
-
-  // Find all numbers and record their position
   lines.forEach((line, lineIndex) => {
     const regex = /(\d+\.?\d*)/g;
     let match;
     while ((match = regex.exec(line)) !== null) {
       numberPositions.push({
-        value: parseFloat(match[1]),
         lineIndex: lineIndex,
-        startIndex: match.index
+        startIndex: match.index,
+        value: parseFloat(match[1])
       });
+      sliderValues.push(parseFloat(match[1])); // initial value
     }
   });
 
-  // Create sliders
   numberPositions.forEach((num, index) => {
     const div = document.createElement('div');
     div.className = 'control';
@@ -157,10 +157,11 @@ function runCode() {
     slider.type = 'range';
     slider.min = 0;
     slider.max = 500;
-    slider.value = num.value;
+    slider.value = sliderValues[index];
 
     slider.oninput = () => {
-      updatePreview(index, slider.value);
+      sliderValues[index] = parseFloat(slider.value);
+      updatePreview();
     };
 
     div.appendChild(label);
@@ -169,13 +170,13 @@ function runCode() {
   });
 }
 
-function updatePreview(index, newValue) {
-  // Rebuild the code with updated number
+function updatePreview() {
   let updatedCode = originalCode;
   let count = 0;
-  updatedCode = updatedCode.replace(/(\d+\.?\d*)/g, (m) => {
+  updatedCode = updatedCode.replace(/(\d+\.?\d*)/g, () => {
+    const val = sliderValues[count];
     count++;
-    return (count - 1 === index ? newValue : m);
+    return val;
   });
   preview.srcdoc = updatedCode;
 }
@@ -186,6 +187,8 @@ function clearCode() {
   preview.srcdoc = '';
   panel.style.display = 'none';
   panel.innerHTML = '<p><strong>Adjustable values appear after Run</strong></p>';
+  numberPositions = [];
+  sliderValues = [];
 }
 
 function updateLines() {
