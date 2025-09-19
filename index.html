@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Code Editor with Layer Selection & Version 1</title>
+<title>Code Editor with Selectable Layers & Version 2</title>
 <style>
 body { margin: 0; font-family: monospace; display: flex; flex-direction: column; height: 100vh; }
 
@@ -22,7 +22,8 @@ iframe { width: 100%; height: 40%; border: 1px solid #000; margin-top: 10px; }
 
 /* Layer panel */
 #layerPanel { background: #222; color: #ddd; padding: 10px; display: none; flex-direction: column; gap: 10px; position: relative; }
-.layerItem { border: 1px solid #555; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+.layerItem { border: 1px solid #555; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
+.layerItem.selected { outline: 2px solid yellow; }
 .layerControls { display: flex; gap: 5px; flex-direction: column; }
 input[type=range] { width: 100%; }
 
@@ -58,7 +59,7 @@ input[type=range] { width: 100%; }
 <div id="layerPanel"></div>
 
 <!-- Version number -->
-<div class="bottom-number">1</div>
+<div class="bottom-number">2</div>
 
 <script>
 const codeArea = document.getElementById("code");
@@ -68,6 +69,7 @@ const layerBtn = document.getElementById('layerBtn');
 const layerPanel = document.getElementById('layerPanel');
 
 let layerMode = false;
+let selectedLayer = null;
 
 // Update line numbers
 function updateLines() {
@@ -89,6 +91,7 @@ function clearCode() {
   updateLines();
   preview.srcdoc = '';
   layerPanel.style.display = 'none';
+  selectedLayer = null;
 }
 
 // Toggle layer selection
@@ -130,17 +133,32 @@ preview.addEventListener('load', () => {
     
     layerItem.appendChild(wrapper);
 
-    // Create sliders for x and y
+    // Click to select layer
+    layerItem.addEventListener('click', () => {
+      if (selectedLayer) selectedLayer.classList.remove('selected');
+      selectedLayer = layerItem;
+      layerItem.classList.add('selected');
+    });
+
+    // Create sliders for X and Y (always control selected layer)
     const controls = document.createElement('div');
     controls.className = 'layerControls';
 
     const sliderX = document.createElement('input');
     sliderX.type = 'range'; sliderX.min = 0; sliderX.max = 300; sliderX.value = 0;
-    sliderX.oninput = () => { wrapper.style.left = sliderX.value + 'px'; wrapper.style.position = 'absolute'; }
+    sliderX.oninput = () => {
+      if (!selectedLayer) return;
+      selectedLayer.querySelector('div').style.left = sliderX.value + 'px';
+      selectedLayer.querySelector('div').style.position = 'absolute';
+    };
 
     const sliderY = document.createElement('input');
     sliderY.type = 'range'; sliderY.min = 0; sliderY.max = 300; sliderY.value = 0;
-    sliderY.oninput = () => { wrapper.style.top = sliderY.value + 'px'; wrapper.style.position = 'absolute'; }
+    sliderY.oninput = () => {
+      if (!selectedLayer) return;
+      selectedLayer.querySelector('div').style.top = sliderY.value + 'px';
+      selectedLayer.querySelector('div').style.position = 'absolute';
+    };
 
     controls.appendChild(sliderX);
     controls.appendChild(sliderY);
