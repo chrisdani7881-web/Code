@@ -2,139 +2,128 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Simple Editor with Layer Selection Window</title>
+<title>Code Editor with Universal Layer Selection</title>
 <style>
-  body {
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    font-family: monospace;
-  }
+  body { margin: 0; font-family: monospace; display: flex; flex-direction: column; height: 100vh; }
+  
+  /* Editor layout */
+  .editor { display: flex; background: #1e1e1e; color: #ddd; overflow: hidden; height: 30%; }
+  .lines { background: #2b2b2b; padding: 5px; text-align: right; color: #777; user-select: none; }
+  textarea { flex: 1; background: transparent; border: none; color: inherit; padding: 5px; outline: none; font-size: 14px; line-height: 1.5; }
 
-  .editor {
-    display: flex;
-    background: #1e1e1e;
-    color: #ddd;
-    overflow: hidden;
-    height: 30%;
-  }
-  .lines {
-    background: #2b2b2b;
-    padding: 5px;
-    text-align: right;
-    user-select: none;
-    color: #777;
-  }
-  textarea {
-    flex: 1;
-    border: none;
-    padding: 5px;
-    background: transparent;
-    color: inherit;
-    resize: none;
-    outline: none;
-    font-size: 14px;
-    line-height: 1.5;
-  }
+  /* Buttons */
+  .run-btn, .clear-btn, #layerBtn { padding: 6px 12px; margin: 5px; cursor: pointer; border: none; color: white; }
+  .run-btn { background: #4caf50; }
+  .clear-btn { background: #f44336; }
+  #layerBtn { background: #2196F3; }
 
-  .run-btn, .clear-btn, .layer-btn {
-    position: absolute;
-    top: 10px;
-    padding: 6px 12px;
-    color: white;
-    border: none;
-    cursor: pointer;
-  }
-  .run-btn { left: 10px; background: #4caf50; }
-  .clear-btn { left: 100px; background: #f44336; }
-  .layer-btn { left: 200px; background: #2196f3; display: none; }
+  /* Preview iframe */
+  iframe { width: 100%; height: 40%; border: 1px solid #000; margin-top: 10px; }
 
-  iframe {
-    width: 100%;
-    height: 40%;
-    border: none;
-    margin-top: 10px;
-  }
-
-  #layerWindow {
-    display: none;
-    background:#333;
-    color:white;
-    padding:10px;
-    margin-top:10px;
-  }
-  #selectedLayers {
-    background:#222;
-    padding:5px;
-    margin-top:5px;
-    min-height:30px;
-  }
+  /* Layer panel */
+  #layerPanel { background: #222; color: #ddd; padding: 10px; display: none; flex-direction: row; gap: 10px; flex-wrap: wrap; }
+  .layerItem { border: 1px solid #555; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; }
+  
+  /* Highlight for selected element */
+  .highlight { outline: 2px solid red; }
 </style>
 </head>
 <body>
+
+<!-- Buttons -->
 <button class="run-btn" onclick="runCode()">Run</button>
 <button class="clear-btn" onclick="clearCode()">Clear</button>
-<button class="layer-btn" id="layerSelectBtn" onclick="enterLayerSelection()">Layer Selection</button>
+<button id="layerBtn">Layer Selection</button>
 
+<!-- Editor -->
 <div class="editor">
   <div class="lines" id="lineNumbers">1</div>
-  <textarea id="code" oninput="updateLines()" spellcheck="false"></textarea>
+  <textarea id="code" oninput="updateLines()" spellcheck="false">// Type HTML, SVG, CSS, JS here
+<div style="width:100px;height:100px;background:orange;margin:20px;">Box</div>
+<p style="color:blue;font-size:20px;">Hello World</p>
+<svg width="100" height="100"><circle cx="50" cy="50" r="40" fill="green"/></svg>
+<img src="https://via.placeholder.com/50" /></textarea>
 </div>
 
+<!-- Preview -->
 <iframe id="preview"></iframe>
 
-<!-- Layer selection window -->
-<div id="layerWindow">
-  <h3>Layer Selection Mode</h3>
-  <p>Click on shapes in the preview to add them as layers.</p>
-  <div id="selectedLayers"></div>
-  <button onclick="exitLayerSelection()">Done</button>
-</div>
+<!-- Layer panel -->
+<div id="layerPanel"></div>
 
 <script>
 const codeArea = document.getElementById("code");
+const lineNumbers = document.getElementById("lineNumbers");
 const preview = document.getElementById("preview");
-const layerBtn = document.getElementById("layerSelectBtn");
-const layerWindow = document.getElementById("layerWindow");
-const selectedLayersDiv = document.getElementById("selectedLayers");
+const layerBtn = document.getElementById('layerBtn');
+const layerPanel = document.getElementById('layerPanel');
 
-let originalCode = '';
-let selectedLayers = [];
+let layerMode = false;
 
+// Update line numbers
+function updateLines() {
+  const code = codeArea.value;
+  const lineCount = code.split("\n").length;
+  lineNumbers.innerText = Array.from({length: lineCount}, (_, i) => i + 1).join("\n");
+}
+updateLines();
+
+// Run code: display in iframe
 function runCode() {
-  originalCode = codeArea.value;
-  preview.srcdoc = originalCode;
-  layerBtn.style.display = 'inline-block';
+  preview.srcdoc = codeArea.value;
+  layerPanel.style.display = 'none';
 }
 
-function enterLayerSelection() {
-  layerWindow.style.display = 'block';
-  selectedLayersDiv.innerHTML = "<p>No layers selected yet.</p>";
-  selectedLayers = [];
-}
-
-function exitLayerSelection() {
-  layerWindow.style.display = 'none';
-}
-
+// Clear editor and preview
 function clearCode() {
   codeArea.value = '';
   updateLines();
   preview.srcdoc = '';
-  layerBtn.style.display = 'none';
-  layerWindow.style.display = 'none';
-  selectedLayers = [];
+  layerPanel.style.display = 'none';
 }
 
-function updateLines() {
-  const code = codeArea.value;
-  const lineNumbers = document.getElementById("lineNumbers");
-  const lineCount = code.split("\n").length;
-  lineNumbers.innerText = Array.from({length: lineCount}, (_, i) => i + 1).join("\n");
-}
+// Toggle layer selection
+layerBtn.addEventListener('click', () => {
+  layerMode = !layerMode;
+  layerPanel.style.display = layerMode ? 'flex' : 'none';
+  layerBtn.textContent = layerMode ? 'Exit Layer Selection' : 'Layer Selection';
+  
+  if (!layerMode) {
+    const doc = preview.contentDocument || preview.contentWindow.document;
+    doc.querySelectorAll('*').forEach(el => el.classList.remove('highlight'));
+  }
+});
 
-updateLines();
+// Layer selection inside iframe
+preview.addEventListener('load', () => {
+  const doc = preview.contentDocument || preview.contentWindow.document;
+  
+  doc.body.addEventListener('click', e => {
+    if (!layerMode) return;
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const target = e.target;
+    if (target === doc.body) return;
+
+    // Highlight selected element
+    target.classList.add('highlight');
+
+    // Add small clone to layer panel
+    const layerItem = document.createElement('div');
+    layerItem.className = 'layerItem';
+    
+    const clone = target.cloneNode(true);
+    clone.style.transform = 'scale(0.3)';
+    clone.style.transformOrigin = 'top left';
+    clone.style.width = 'auto';
+    clone.style.height = 'auto';
+    
+    layerItem.appendChild(clone);
+    layerPanel.appendChild(layerItem);
+  }, true);
+});
 </script>
+
 </body>
 </html>
