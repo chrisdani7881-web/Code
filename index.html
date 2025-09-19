@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Simple Editor with Layer Selection</title>
+<title>Simple Editor with Layer Selection Window</title>
 <style>
   body {
     margin: 0;
@@ -57,21 +57,18 @@
     margin-top: 10px;
   }
 
-  .control-panel {
-    background: #222;
-    color: #ddd;
-    padding: 10px;
+  #layerWindow {
     display: none;
-    flex-direction: column;
-    gap: 10px;
+    background:#333;
+    color:white;
+    padding:10px;
+    margin-top:10px;
   }
-  .control-panel .control {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .control-panel label {
-    flex: 1;
+  #selectedLayers {
+    background:#222;
+    padding:5px;
+    margin-top:5px;
+    min-height:30px;
   }
 </style>
 </head>
@@ -87,27 +84,38 @@
 
 <iframe id="preview"></iframe>
 
+<!-- Layer selection window -->
+<div id="layerWindow">
+  <h3>Layer Selection Mode</h3>
+  <p>Click on shapes in the preview to add them as layers.</p>
+  <div id="selectedLayers"></div>
+  <button onclick="exitLayerSelection()">Done</button>
+</div>
+
 <script>
 const codeArea = document.getElementById("code");
 const preview = document.getElementById("preview");
 const layerBtn = document.getElementById("layerSelectBtn");
+const layerWindow = document.getElementById("layerWindow");
+const selectedLayersDiv = document.getElementById("selectedLayers");
 
 let originalCode = '';
+let selectedLayers = [];
 
 function runCode() {
   originalCode = codeArea.value;
   preview.srcdoc = originalCode;
-
-  // Show layer selection button
   layerBtn.style.display = 'inline-block';
 }
 
 function enterLayerSelection() {
-  alert("Layer selection mode will be implemented next.");
-  // In future steps:
-  // 1. Make shapes in the preview clickable
-  // 2. Highlight selected shapes
-  // 3. Store selected shapes as layers
+  layerWindow.style.display = 'block';
+  selectedLayersDiv.innerHTML = "<p>No layers selected yet.</p>";
+  selectedLayers = [];
+}
+
+function exitLayerSelection() {
+  layerWindow.style.display = 'none';
 }
 
 function clearCode() {
@@ -115,6 +123,8 @@ function clearCode() {
   updateLines();
   preview.srcdoc = '';
   layerBtn.style.display = 'none';
+  layerWindow.style.display = 'none';
+  selectedLayers = [];
 }
 
 function updateLines() {
