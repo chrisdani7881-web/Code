@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Code Editor with Selectable Layers & Version 2</title>
+<title>Code Editor with Layer Move & Version 3</title>
 <style>
 body { margin: 0; font-family: monospace; display: flex; flex-direction: column; height: 100vh; }
 
@@ -15,7 +15,7 @@ textarea { flex: 1; background: transparent; border: none; color: inherit; paddi
 button { padding: 6px 12px; margin: 5px; cursor: pointer; border: none; color: white; }
 .run-btn { background: #4caf50; }
 .clear-btn { background: #f44336; }
-#layerBtn { background: #2196F3; }
+#layerBtn, #moveBtn { background: #2196F3; }
 
 /* Preview iframe */
 iframe { width: 100%; height: 40%; border: 1px solid #000; margin-top: 10px; }
@@ -24,7 +24,9 @@ iframe { width: 100%; height: 40%; border: 1px solid #000; margin-top: 10px; }
 #layerPanel { background: #222; color: #ddd; padding: 10px; display: none; flex-direction: column; gap: 10px; position: relative; }
 .layerItem { border: 1px solid #555; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
 .layerItem.selected { outline: 2px solid yellow; }
-.layerControls { display: flex; gap: 5px; flex-direction: column; }
+
+/* Controls section under layers */
+#layerControlsPanel { display: none; flex-direction: column; gap: 5px; padding: 5px; background: #333; }
 input[type=range] { width: 100%; }
 
 /* Highlight for selected element in preview */
@@ -58,8 +60,17 @@ input[type=range] { width: 100%; }
 <!-- Layer panel -->
 <div id="layerPanel"></div>
 
+<!-- Move controls -->
+<div id="layerControlsPanel">
+  <button id="moveBtn">Move</button>
+  <div id="moveSliders" style="display:none;">
+    <label>X: <input type="range" id="sliderX" min="0" max="300" value="0"></label>
+    <label>Y: <input type="range" id="sliderY" min="0" max="300" value="0"></label>
+  </div>
+</div>
+
 <!-- Version number -->
-<div class="bottom-number">2</div>
+<div class="bottom-number">3</div>
 
 <script>
 const codeArea = document.getElementById("code");
@@ -67,6 +78,11 @@ const lineNumbers = document.getElementById("lineNumbers");
 const preview = document.getElementById("preview");
 const layerBtn = document.getElementById('layerBtn');
 const layerPanel = document.getElementById('layerPanel');
+const layerControlsPanel = document.getElementById('layerControlsPanel');
+const moveBtn = document.getElementById('moveBtn');
+const moveSliders = document.getElementById('moveSliders');
+const sliderX = document.getElementById('sliderX');
+const sliderY = document.getElementById('sliderY');
 
 let layerMode = false;
 let selectedLayer = null;
@@ -83,6 +99,8 @@ updateLines();
 function runCode() {
   preview.srcdoc = codeArea.value;
   layerPanel.style.display = 'none';
+  layerControlsPanel.style.display = 'flex';
+  moveSliders.style.display = 'none';
 }
 
 // Clear editor and preview
@@ -91,6 +109,7 @@ function clearCode() {
   updateLines();
   preview.srcdoc = '';
   layerPanel.style.display = 'none';
+  moveSliders.style.display = 'none';
   selectedLayer = null;
 }
 
@@ -138,34 +157,30 @@ preview.addEventListener('load', () => {
       if (selectedLayer) selectedLayer.classList.remove('selected');
       selectedLayer = layerItem;
       layerItem.classList.add('selected');
+      moveSliders.style.display = 'none'; // hide sliders until move is clicked
+      sliderX.value = 0; sliderY.value = 0; // reset sliders
     });
-
-    // Create sliders for X and Y (always control selected layer)
-    const controls = document.createElement('div');
-    controls.className = 'layerControls';
-
-    const sliderX = document.createElement('input');
-    sliderX.type = 'range'; sliderX.min = 0; sliderX.max = 300; sliderX.value = 0;
-    sliderX.oninput = () => {
-      if (!selectedLayer) return;
-      selectedLayer.querySelector('div').style.left = sliderX.value + 'px';
-      selectedLayer.querySelector('div').style.position = 'absolute';
-    };
-
-    const sliderY = document.createElement('input');
-    sliderY.type = 'range'; sliderY.min = 0; sliderY.max = 300; sliderY.value = 0;
-    sliderY.oninput = () => {
-      if (!selectedLayer) return;
-      selectedLayer.querySelector('div').style.top = sliderY.value + 'px';
-      selectedLayer.querySelector('div').style.position = 'absolute';
-    };
-
-    controls.appendChild(sliderX);
-    controls.appendChild(sliderY);
-    layerItem.appendChild(controls);
 
     layerPanel.appendChild(layerItem);
   }, true);
+});
+
+// Move button
+moveBtn.addEventListener('click', () => {
+  if (!selectedLayer) return;
+  moveSliders.style.display = moveSliders.style.display === 'none' ? 'block' : 'none';
+});
+
+// Sliders control selected layer
+sliderX.addEventListener('input', () => {
+  if (!selectedLayer) return;
+  selectedLayer.querySelector('div').style.left = sliderX.value + 'px';
+  selectedLayer.querySelector('div').style.position = 'absolute';
+});
+sliderY.addEventListener('input', () => {
+  if (!selectedLayer) return;
+  selectedLayer.querySelector('div').style.top = sliderY.value + 'px';
+  selectedLayer.querySelector('div').style.position = 'absolute';
 });
 </script>
 
