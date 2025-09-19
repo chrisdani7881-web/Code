@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Code Editor with Layer Move & Version 3</title>
+<title>Code Editor with Layer Move & Version 4</title>
 <style>
 body { margin: 0; font-family: monospace; display: flex; flex-direction: column; height: 100vh; }
 
@@ -70,7 +70,7 @@ input[type=range] { width: 100%; }
 </div>
 
 <!-- Version number -->
-<div class="bottom-number">3</div>
+<div class="bottom-number">4</div>
 
 <script>
 const codeArea = document.getElementById("code");
@@ -86,6 +86,7 @@ const sliderY = document.getElementById('sliderY');
 
 let layerMode = false;
 let selectedLayer = null;
+let selectedPreviewEl = null;
 
 // Update line numbers
 function updateLines() {
@@ -101,6 +102,8 @@ function runCode() {
   layerPanel.style.display = 'none';
   layerControlsPanel.style.display = 'flex';
   moveSliders.style.display = 'none';
+  selectedLayer = null;
+  selectedPreviewEl = null;
 }
 
 // Clear editor and preview
@@ -111,6 +114,7 @@ function clearCode() {
   layerPanel.style.display = 'none';
   moveSliders.style.display = 'none';
   selectedLayer = null;
+  selectedPreviewEl = null;
 }
 
 // Toggle layer selection
@@ -156,9 +160,12 @@ preview.addEventListener('load', () => {
     layerItem.addEventListener('click', () => {
       if (selectedLayer) selectedLayer.classList.remove('selected');
       selectedLayer = layerItem;
-      layerItem.classList.add('selected');
-      moveSliders.style.display = 'none'; // hide sliders until move is clicked
-      sliderX.value = 0; sliderY.value = 0; // reset sliders
+      selectedLayer.classList.add('selected');
+      selectedPreviewEl = target; // <-- store actual element in preview
+      moveSliders.style.display = 'none';
+      sliderX.value = parseInt(target.style.left || 0);
+      sliderY.value = parseInt(target.style.top || 0);
+      target.style.position = 'absolute';
     });
 
     layerPanel.appendChild(layerItem);
@@ -167,20 +174,20 @@ preview.addEventListener('load', () => {
 
 // Move button
 moveBtn.addEventListener('click', () => {
-  if (!selectedLayer) return;
+  if (!selectedPreviewEl) return;
   moveSliders.style.display = moveSliders.style.display === 'none' ? 'block' : 'none';
 });
 
-// Sliders control selected layer
+// Sliders control selected preview element
 sliderX.addEventListener('input', () => {
-  if (!selectedLayer) return;
-  selectedLayer.querySelector('div').style.left = sliderX.value + 'px';
-  selectedLayer.querySelector('div').style.position = 'absolute';
+  if (!selectedPreviewEl) return;
+  selectedPreviewEl.style.left = sliderX.value + 'px';
+  selectedPreviewEl.style.position = 'absolute';
 });
 sliderY.addEventListener('input', () => {
-  if (!selectedLayer) return;
-  selectedLayer.querySelector('div').style.top = sliderY.value + 'px';
-  selectedLayer.querySelector('div').style.position = 'absolute';
+  if (!selectedPreviewEl) return;
+  selectedPreviewEl.style.top = sliderY.value + 'px';
+  selectedPreviewEl.style.position = 'absolute';
 });
 </script>
 
