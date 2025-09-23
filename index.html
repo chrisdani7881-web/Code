@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Code Editor with Scale Slider & Layer Move</title>
+    <title>Code Editor with Graphic Scale Slider</title>
     <style>
         body {
             margin: 0;
@@ -85,6 +85,9 @@
             border-radius: 8px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
         }
+        iframe:hover {
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.7);
+        }
 
         /* Layer panel */
         #layerPanel {
@@ -138,6 +141,7 @@
             border-radius: 8px;
             margin-top: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            animation: pulse 2s infinite ease-in-out;
         }
         .slider-container {
             display: flex;
@@ -210,6 +214,13 @@
             font-size: 24px;
             border-top: 1px solid #444;
             text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Pulsing animation for slider panel */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); }
+            50% { box-shadow: 0 0 15px rgba(0, 255, 204, 0.7); }
+            100% { box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); }
         }
     </style>
 </head>
@@ -294,7 +305,7 @@ function updateLines() {
 }
 updateLines();
 
-// Run code: display in iframe
+// Run code: display in iframe and reset scale
 function runCode() {
     preview.srcdoc = codeArea.value;
     layerPanel.style.display = 'none';
@@ -303,6 +314,11 @@ function runCode() {
     selectedLayer = null;
     selectedPreviewEl = null;
     slider1.value = ''; // Reset scale slider
+    const doc = preview.contentDocument || preview.contentWindow.document;
+    if (doc.body) {
+        doc.body.style.transform = 'scale(1)';
+        doc.body.style.transformOrigin = 'top left';
+    }
 }
 
 // Clear editor and preview
@@ -315,6 +331,10 @@ function clearCode() {
     selectedLayer = null;
     selectedPreviewEl = null;
     slider1.value = ''; // Reset scale slider
+    const doc = preview.contentDocument || preview.contentWindow.document;
+    if (doc.body) {
+        doc.body.style.transform = 'scale(1)';
+    }
 }
 
 // Toggle layer selection
@@ -326,7 +346,6 @@ layerBtn.addEventListener('click', () => {
     if (!layerMode) {
         const doc = preview.contentDocument || preview.contentWindow.document;
         doc.querySelectorAll('*').forEach(el => el.classList.remove('highlight'));
-        slider1.value = ''; // Reset scale slider when exiting layer mode
     }
 });
 
@@ -370,9 +389,7 @@ preview.addEventListener('load', () => {
             moveSliders.style.display = 'none';
             sliderX.value = parseInt(target.style.left || 0);
             sliderY.value = parseInt(target.style.top || 0);
-            slider1.value = parseFloat(target.style.transform?.match(/scale\(([^)]+)\)/)?.[1] || 1.0);
             target.style.position = 'absolute';
-            target.style.transformOrigin = 'center';
         });
 
         layerPanel.appendChild(layerItem);
@@ -385,7 +402,7 @@ moveBtn.addEventListener('click', () => {
     moveSliders.style.display = moveSliders.style.display === 'none' ? 'block' : 'none';
 });
 
-// Sliders control selected preview element
+// Sliders control selected preview element position
 sliderX.addEventListener('input', () => {
     if (!selectedPreviewEl) return;
     selectedPreviewEl.style.left = sliderX.value + 'px';
@@ -397,13 +414,14 @@ sliderY.addEventListener('input', () => {
     selectedPreviewEl.style.position = 'absolute';
 });
 
-// Scale slider controls the size of the selected element
+// Scale slider controls the graphic content in the preview iframe
 slider1.addEventListener('input', () => {
-    if (!selectedPreviewEl) return;
-    const scaleValue = slider1.value || 1.0; // Default to 1.0 if empty
-    selectedPreviewEl.style.transform = `scale(${scaleValue})`;
-    selectedPreviewEl.style.position = 'absolute';
-    selectedPreviewEl.style.transformOrigin = 'center';
+    const doc = preview.contentDocument || preview.contentWindow.document;
+    if (doc.body) {
+        const scaleValue = slider1.value || 1.0; // Default to 1.0 if empty
+        doc.body.style.transform = `scale(${scaleValue})`;
+        doc.body.style.transformOrigin = 'top left';
+    }
 });
 </script>
 </body>
