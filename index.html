@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Code Editor with Layer Move & Sliders</title>
+    <title>Code Editor with Scale Slider & Layer Move</title>
     <style>
         body {
             margin: 0;
@@ -48,7 +48,7 @@
             color: white;
             font-size: 14px;
             border-radius: 4px;
-            transition: transform 0.2s ease, background 0.2s ease;
+            transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
         }
         .run-btn {
             background: #4caf50;
@@ -56,6 +56,7 @@
         .run-btn:hover {
             background: #45a049;
             transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.7);
         }
         .clear-btn {
             background: #f44336;
@@ -63,6 +64,7 @@
         .clear-btn:hover {
             background: #da3c30;
             transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(244, 67, 54, 0.7);
         }
         #layerBtn, #moveBtn {
             background: #2196F3;
@@ -70,6 +72,7 @@
         #layerBtn:hover, #moveBtn:hover {
             background: #1e88e5;
             transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(33, 150, 243, 0.7);
         }
 
         /* Preview iframe */
@@ -105,6 +108,10 @@
             position: relative;
             cursor: pointer;
             border-radius: 4px;
+            transition: transform 0.2s ease;
+        }
+        .layerItem:hover {
+            transform: scale(1.05);
         }
         .layerItem.selected {
             outline: 2px solid #ffd700;
@@ -141,20 +148,21 @@
             color: #ddd;
             font-size: 14px;
             width: 50px;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
         }
 
-        /* Bigger sliders */
+        /* Bigger sliders with neon glow */
         input[type=range] {
             width: 100%;
             height: 30px;
             -webkit-appearance: none;
-            background: #555;
+            background: linear-gradient(90deg, #555, #777);
             border-radius: 8px;
             cursor: pointer;
             transition: background 0.2s ease;
         }
         input[type=range]:hover {
-            background: #666;
+            background: linear-gradient(90deg, #666, #888);
         }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -164,7 +172,12 @@
             border-radius: 50%;
             cursor: pointer;
             margin-top: -6px;
-            box-shadow: 0 0 8px rgba(231, 76, 60, 0.7);
+            box-shadow: 0 0 12px rgba(231, 76, 60, 0.8), 0 0 20px rgba(231, 76, 60, 0.5);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        input[type=range]:hover::-webkit-slider-thumb {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(231, 76, 60, 1), 0 0 25px rgba(231, 76, 60, 0.7);
         }
         input[type=range]::-moz-range-thumb {
             height: 40px;
@@ -172,13 +185,19 @@
             background: #e74c3c;
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 0 8px rgba(231, 76, 60, 0.7);
+            box-shadow: 0 0 12px rgba(231, 76, 60, 0.8), 0 0 20px rgba(231, 76, 60, 0.5);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        input[type=range]:hover::-moz-range-thumb {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(231, 76, 60, 1), 0 0 25px rgba(231, 76, 60, 0.7);
         }
 
         /* Highlight for selected element in preview */
         .highlight {
             outline: 2px solid #ff0000;
             box-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+            transition: transform 0.3s ease;
         }
 
         /* Version number at bottom */
@@ -190,6 +209,7 @@
             color: #fff;
             font-size: 24px;
             border-top: 1px solid #444;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
         }
     </style>
 </head>
@@ -217,8 +237,8 @@
 <!-- Slider panel -->
 <div id="sliderPanel">
     <div class="slider-container">
-        <label>Slider 1</label>
-        <input type="range" id="slider1" min="0" max="100" value="">
+        <label>Scale</label>
+        <input type="range" id="slider1" min="0.1" max="3.0" step="0.1" value="">
     </div>
     <div class="slider-container">
         <label>Slider 2</label>
@@ -260,6 +280,7 @@ const moveBtn = document.getElementById('moveBtn');
 const moveSliders = document.getElementById('moveSliders');
 const sliderX = document.getElementById('sliderX');
 const sliderY = document.getElementById('sliderY');
+const slider1 = document.getElementById('slider1');
 
 let layerMode = false;
 let selectedLayer = null;
@@ -281,6 +302,7 @@ function runCode() {
     moveSliders.style.display = 'none';
     selectedLayer = null;
     selectedPreviewEl = null;
+    slider1.value = ''; // Reset scale slider
 }
 
 // Clear editor and preview
@@ -292,6 +314,7 @@ function clearCode() {
     moveSliders.style.display = 'none';
     selectedLayer = null;
     selectedPreviewEl = null;
+    slider1.value = ''; // Reset scale slider
 }
 
 // Toggle layer selection
@@ -303,6 +326,7 @@ layerBtn.addEventListener('click', () => {
     if (!layerMode) {
         const doc = preview.contentDocument || preview.contentWindow.document;
         doc.querySelectorAll('*').forEach(el => el.classList.remove('highlight'));
+        slider1.value = ''; // Reset scale slider when exiting layer mode
     }
 });
 
@@ -346,7 +370,9 @@ preview.addEventListener('load', () => {
             moveSliders.style.display = 'none';
             sliderX.value = parseInt(target.style.left || 0);
             sliderY.value = parseInt(target.style.top || 0);
+            slider1.value = parseFloat(target.style.transform?.match(/scale\(([^)]+)\)/)?.[1] || 1.0);
             target.style.position = 'absolute';
+            target.style.transformOrigin = 'center';
         });
 
         layerPanel.appendChild(layerItem);
@@ -369,6 +395,15 @@ sliderY.addEventListener('input', () => {
     if (!selectedPreviewEl) return;
     selectedPreviewEl.style.top = sliderY.value + 'px';
     selectedPreviewEl.style.position = 'absolute';
+});
+
+// Scale slider controls the size of the selected element
+slider1.addEventListener('input', () => {
+    if (!selectedPreviewEl) return;
+    const scaleValue = slider1.value || 1.0; // Default to 1.0 if empty
+    selectedPreviewEl.style.transform = `scale(${scaleValue})`;
+    selectedPreviewEl.style.position = 'absolute';
+    selectedPreviewEl.style.transformOrigin = 'center';
 });
 </script>
 </body>
