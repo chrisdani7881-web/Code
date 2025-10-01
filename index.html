@@ -14,11 +14,7 @@ body {
     flex-direction: column;
     height: 100vh;
 }
-.editor-controls {
-    display: flex;
-    gap: 5px;
-    padding: 5px;
-}
+.editor-controls { display: flex; gap: 5px; padding: 5px; }
 button {
     padding: 8px 14px;
     border: none;
@@ -43,44 +39,12 @@ button {
 .save-btn:hover { background: #fb8c00; }
 .rotate-btn { background: #00bcd4; }
 .rotate-btn:hover { background: #00acc1; }
-.arrow-btn {
-    background: #333;
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
-}
-.editor {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-}
-.lines {
-    background: #2b2b2b;
-    padding: 5px;
-    text-align: right;
-    color: #777;
-    user-select: none;
-}
-textarea {
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: inherit;
-    padding: 5px;
-    outline: none;
-    font-size: 14px;
-    line-height: 1.5;
-}
-iframe {
-    width: 100%;
-    height: 40%;
-    border: 1px solid #000;
-    margin-top: 10px;
-    background: #fff;
-    border-radius: 8px;
-}
+.arrow-btn { background: #333; width: 40px; height: 40px; font-size: 20px; }
+.editor { display: flex; flex: 1; overflow: hidden; }
+.lines { background: #2b2b2b; padding: 5px; text-align: right; color: #777; user-select: none; }
+textarea { flex: 1; background: transparent; border: none; color: inherit; padding: 5px; outline: none; font-size: 14px; line-height: 1.5; }
+iframe { width: 100%; height: 40%; border: 1px solid #000; margin-top: 10px; background: #fff; border-radius: 8px; }
 .arrow-container { display: none; gap: 5px; margin-top: 5px; }
-.rotate-controls { display: none; gap: 5px; margin-top: 5px; }
 </style>
 </head>
 <body>
@@ -91,7 +55,7 @@ iframe {
     <button class="clear-all-btn" onclick="clearAll()">Clear All</button>
     <button class="move-btn" onclick="toggleMove()">Move</button>
     <button class="save-btn" onclick="saveLayerCode()">Save</button>
-    <button class="rotate-btn" onclick="toggleRotate()">Rotate</button>
+    <button class="rotate-btn" onclick="toggleRotateArrows()">Rotate</button>
 </div>
 
 <div class="editor-controls" id="layerButtons">
@@ -112,16 +76,16 @@ iframe {
     <textarea id="code" oninput="updateLines()"></textarea>
 </div>
 
-<div class="arrow-container" id="arrowContainer">
+<div class="arrow-container" id="moveArrows">
     <button class="arrow-btn" onclick="moveSelectedLayer(0,-10)">↑</button>
     <button class="arrow-btn" onclick="moveSelectedLayer(0,10)">↓</button>
     <button class="arrow-btn" onclick="moveSelectedLayer(-10,0)">←</button>
     <button class="arrow-btn" onclick="moveSelectedLayer(10,0)">→</button>
 </div>
 
-<div class="rotate-controls" id="rotateControls">
-    <button class="arrow-btn" onclick="rotateLayer(-15)">⟲</button>
-    <button class="arrow-btn" onclick="rotateLayer(15)">⟳</button>
+<div class="arrow-container" id="rotateArrows">
+    <button class="arrow-btn" onclick="rotateSelectedLayer(-15)">⟲</button>
+    <button class="arrow-btn" onclick="rotateSelectedLayer(15)">⟳</button>
 </div>
 
 <iframe id="preview"></iframe>
@@ -130,8 +94,8 @@ iframe {
 const codeArea = document.getElementById("code");
 const lineNumbers = document.getElementById("lineNumbers");
 const preview = document.getElementById("preview");
-const arrowContainer = document.getElementById("arrowContainer");
-const rotateControls = document.getElementById("rotateControls");
+const moveArrows = document.getElementById("moveArrows");
+const rotateArrows = document.getElementById("rotateArrows");
 const layerBtns = document.querySelectorAll('.layer-btn');
 
 let currentLayer = 1;
@@ -141,7 +105,6 @@ let layers = {
     3:'',4:'',5:'',6:'',7:'',8:'',9:'',10:''
 };
 let rotation = {};
-let layerElements = {};
 
 function selectLayer(num) {
     currentLayer = num;
@@ -159,20 +122,23 @@ function updateLines() {
 
 function runCode() {
     const doc = preview.contentDocument || preview.contentWindow.document;
-    let layerDiv = doc.getElementById('layer'+currentLayer);
-    if(!layerDiv){
-        layerDiv = document.createElement('div');
-        layerDiv.id = 'layer'+currentLayer;
-        doc.body.appendChild(layerDiv);
-        layerElements[currentLayer] = layerDiv;
-    }
-    layerDiv.innerHTML = codeArea.value;
-    layers[currentLayer] = codeArea.value;
-    layerDiv.style.position = 'absolute';
-    if(!layerDiv.style.top) layerDiv.style.top = '50px';
-    if(!layerDiv.style.left) layerDiv.style.left = '50px';
-    layerDiv.style.transform = rotation[currentLayer] ? 'rotate('+rotation[currentLayer]+'deg)' : '';
-    layerDiv.style.transformOrigin = '50% 50%';
+    if(!doc.body) doc.body.innerHTML = '';
+    Object.keys(layers).forEach(l => {
+        const code = layers[l];
+        if(!code) return;
+        let layerDiv = doc.getElementById('layer'+l);
+        if(!layerDiv){
+            layerDiv = document.createElement('div');
+            layerDiv.id = 'layer'+l;
+            doc.body.appendChild(layerDiv);
+        }
+        layerDiv.innerHTML = code;
+        layerDiv.style.position = 'absolute';
+        if(!layerDiv.style.top) layerDiv.style.top = '50px';
+        if(!layerDiv.style.left) layerDiv.style.left = '50px';
+        layerDiv.style.transform = rotation[l] ? 'rotate('+rotation[l]+'deg)' : '';
+        layerDiv.style.transformOrigin = '50% 50%';
+    });
 }
 
 function clearLayer() {
@@ -182,7 +148,7 @@ function clearLayer() {
     const doc = preview.contentDocument || preview.contentWindow.document;
     const layerDiv = doc.getElementById('layer'+currentLayer);
     if(layerDiv) doc.body.removeChild(layerDiv);
-    delete layerElements[currentLayer];
+    delete rotation[currentLayer];
 }
 
 function clearAll() {
@@ -192,50 +158,51 @@ function clearAll() {
     const doc = preview.contentDocument || preview.contentWindow.document;
     doc.body.innerHTML='';
     rotation = {};
-    layerElements = {};
 }
 
 function toggleMove() {
-    arrowContainer.style.display = arrowContainer.style.display==='flex'?'none':'flex';
+    moveArrows.style.display = moveArrows.style.display==='flex'?'none':'flex';
+}
+
+function toggleRotateArrows() {
+    rotateArrows.style.display = rotateArrows.style.display==='flex'?'none':'flex';
 }
 
 function moveSelectedLayer(dx,dy) {
-    const el = layerElements[currentLayer];
-    if(el){
-        let top = parseInt(el.style.top||0);
-        let left = parseInt(el.style.left||0);
-        el.style.top = (top+dy)+'px';
-        el.style.left = (left+dx)+'px';
+    const doc = preview.contentDocument || preview.contentWindow.document;
+    const layerDiv = doc.getElementById('layer'+currentLayer);
+    if(layerDiv){
+        let top = parseInt(layerDiv.style.top||0);
+        let left = parseInt(layerDiv.style.left||0);
+        layerDiv.style.top = (top+dy)+'px';
+        layerDiv.style.left = (left+dx)+'px';
     }
 }
 
-function toggleRotate() {
-    rotateControls.style.display = rotateControls.style.display==='flex'?'none':'flex';
-}
-
-function rotateLayer(deg) {
-    const el = layerElements[currentLayer];
-    if(el){
+function rotateSelectedLayer(deg) {
+    const doc = preview.contentDocument || preview.contentWindow.document;
+    const layerDiv = doc.getElementById('layer'+currentLayer);
+    if(layerDiv){
         rotation[currentLayer] = rotation[currentLayer] ? rotation[currentLayer]+deg : deg;
-        el.style.transform = 'rotate('+rotation[currentLayer]+'deg)';
-        el.style.transformOrigin = '50% 50%';
+        layerDiv.style.transform = 'rotate('+rotation[currentLayer]+'deg)';
+        layerDiv.style.transformOrigin = '50% 50%';
     }
 }
 
 function saveLayerCode() {
-    const el = layerElements[currentLayer];
-    if(el){
+    const doc = preview.contentDocument || preview.contentWindow.document;
+    const layerDiv = doc.getElementById('layer'+currentLayer);
+    if(layerDiv){
         let code = layers[currentLayer] || '';
-        // Update position
-        code = code.replace(/top:\s*\d+px;/,'top:'+el.style.top+';');
-        code = code.replace(/left:\s*\d+px;/,'left:'+el.style.left+';');
-        // Update rotation
-        const transformRegex = /transform:\s*rotate\(\d+deg\);?/;
-        const rotationValue = rotation[currentLayer] || 0;
-        if(transformRegex.test(code)){
-            code = code.replace(transformRegex, 'transform: rotate('+rotationValue+'deg);');
-        } else {
-            code = code.replace(/;?$/,'; transform: rotate('+rotationValue+'deg);');
+        // Update top, left, rotation
+        code = code.replace(/top:\s*\d+px;/,'top:'+layerDiv.style.top+';');
+        code = code.replace(/left:\s*\d+px;/,'left:'+layerDiv.style.left+';');
+        if(rotation[currentLayer]){
+            if(code.includes('transform:')) {
+                code = code.replace(/transform:[^;]+;/,'transform:rotate('+rotation[currentLayer]+'deg);');
+            } else {
+                code += 'transform:rotate('+rotation[currentLayer]+'deg);';
+            }
         }
         layers[currentLayer] = code;
         codeArea.value = code;
@@ -243,7 +210,7 @@ function saveLayerCode() {
     }
 }
 
-selectLayer(1); // Initialize
+selectLayer(1);
 </script>
 
 </body>
