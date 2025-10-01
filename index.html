@@ -94,9 +94,8 @@ const preview = document.getElementById("preview");
 const runBtn = document.getElementById("runBtn");
 const clearBtn = document.getElementById("clearBtn");
 
-// Initialize editor with default code
+// Initialize editor with default code, but do NOT show in preview yet
 codeArea.value = defaultCode;
-preview.srcdoc = defaultCode;
 
 // Update line numbers
 function updateLines() {
@@ -115,7 +114,7 @@ runBtn.addEventListener("click", function() {
 clearBtn.addEventListener("click", function() {
     codeArea.value = defaultCode;
     updateLines();
-    preview.srcdoc = defaultCode;
+    preview.srcdoc = ""; // Clears the preview
 });
 </script>
 
