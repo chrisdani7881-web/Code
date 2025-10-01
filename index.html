@@ -14,13 +14,7 @@
         flex-direction: column;
         height: 100vh;
     }
-
-    .editor-controls {
-        display: flex;
-        gap: 5px;
-        padding: 5px;
-    }
-
+    .editor-controls { display: flex; gap: 5px; padding: 5px; }
     button {
         padding: 8px 14px;
         border: none;
@@ -30,72 +24,26 @@
         color: #fff;
         transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
     }
-
     .run-btn { background: #4caf50; }
     .run-btn:hover { background: #45a049; transform: scale(1.05); box-shadow: 0 0 10px rgba(76,175,80,0.7); }
-
     .clear-btn { background: #f44336; }
     .clear-btn:hover { background: #da3c30; transform: scale(1.05); box-shadow: 0 0 10px rgba(244,67,54,0.7); }
-
     .clear-all-btn { background: #9c27b0; }
     .clear-all-btn:hover { background: #8e24aa; transform: scale(1.05); box-shadow: 0 0 10px rgba(156,39,176,0.7); }
-
-    .layer-btn {
-        background: #555;
-    }
-    .layer-btn.selected {
-        background: yellow;
-        color: black;
-    }
+    .layer-btn { background: #555; }
+    .layer-btn.selected { background: yellow; color: black; }
     .layer-btn:hover { background: #777; }
-
     .move-btn { background: #2196F3; }
     .move-btn:hover { background: #1e88e5; }
-
     .save-btn { background: #ff9800; }
     .save-btn:hover { background: #fb8c00; }
-
-    .arrow-btn {
-        background: #333;
-        width: 40px;
-        height: 40px;
-        font-size: 20px;
-    }
-
-    .editor {
-        display: flex;
-        flex: 1;
-        overflow: hidden;
-    }
-
-    .lines {
-        background: #2b2b2b;
-        padding: 5px;
-        text-align: right;
-        color: #777;
-        user-select: none;
-    }
-
-    textarea {
-        flex: 1;
-        background: transparent;
-        border: none;
-        color: inherit;
-        padding: 5px;
-        outline: none;
-        font-size: 14px;
-        line-height: 1.5;
-    }
-
-    iframe {
-        width: 100%;
-        height: 40%;
-        border: 1px solid #000;
-        margin-top: 10px;
-        background: #fff;
-        border-radius: 8px;
-    }
-
+    .rotate-btn { background: #00bcd4; }
+    .rotate-btn:hover { background: #00acc1; }
+    .arrow-btn { background: #333; width: 40px; height: 40px; font-size: 20px; }
+    .editor { display: flex; flex: 1; overflow: hidden; }
+    .lines { background: #2b2b2b; padding: 5px; text-align: right; color: #777; user-select: none; }
+    textarea { flex: 1; background: transparent; border: none; color: inherit; padding: 5px; outline: none; font-size: 14px; line-height: 1.5; }
+    iframe { width: 100%; height: 40%; border: 1px solid #000; margin-top: 10px; background: #fff; border-radius: 8px; }
     .arrow-container { display: none; gap: 5px; margin-top: 5px; }
 </style>
 </head>
@@ -107,6 +55,7 @@
     <button class="clear-all-btn" onclick="clearAll()">Clear All</button>
     <button class="move-btn" onclick="toggleMove()">Move</button>
     <button class="save-btn" onclick="saveLayerCode()">Save</button>
+    <button class="rotate-btn">Rotate</button>
 </div>
 
 <div class="editor-controls" id="layerButtons">
@@ -165,35 +114,23 @@ function updateLines() {
 }
 
 function runCode() {
-    const doc = preview.contentDocument || preview.contentWindow.document;
-    let layerDiv = doc.getElementById('layer'+currentLayer);
-    if(!layerDiv){
-        layerDiv = document.createElement('div');
-        layerDiv.id = 'layer'+currentLayer;
-        doc.body.appendChild(layerDiv);
-    }
-    layerDiv.innerHTML = codeArea.value;
-    layers[currentLayer] = codeArea.value;
-    layerDiv.style.position = 'absolute';
-    if(!layerDiv.style.top) layerDiv.style.top = '50px';
-    if(!layerDiv.style.left) layerDiv.style.left = '50px';
+    const html = codeArea.value;
+    layers[currentLayer] = html;
+    preview.srcdoc = html; // inject code into iframe
 }
 
 function clearLayer() {
     layers[currentLayer] = '';
     codeArea.value = '';
     updateLines();
-    const doc = preview.contentDocument || preview.contentWindow.document;
-    const layerDiv = doc.getElementById('layer'+currentLayer);
-    if(layerDiv) doc.body.removeChild(layerDiv);
+    preview.srcdoc = '';
 }
 
 function clearAll() {
-    Object.keys(layers).forEach(k=>layers[k]='');
+    Object.keys(layers).forEach(k => layers[k]='');
     codeArea.value = '';
     updateLines();
-    const doc = preview.contentDocument || preview.contentWindow.document;
-    doc.body.innerHTML='';
+    preview.srcdoc = '';
 }
 
 function toggleMove() {
@@ -201,8 +138,8 @@ function toggleMove() {
 }
 
 function moveSelectedLayer(dx,dy) {
-    const doc = preview.contentDocument || preview.contentWindow.document;
-    const layerDiv = doc.getElementById('layer'+currentLayer);
+    const iframeDoc = preview.contentDocument || preview.contentWindow.document;
+    const layerDiv = iframeDoc.getElementById('layer'+currentLayer);
     if(layerDiv){
         let top = parseInt(layerDiv.style.top||0);
         let left = parseInt(layerDiv.style.left||0);
@@ -212,11 +149,10 @@ function moveSelectedLayer(dx,dy) {
 }
 
 function saveLayerCode() {
-    const doc = preview.contentDocument || preview.contentWindow.document;
-    const layerDiv = doc.getElementById('layer'+currentLayer);
+    const iframeDoc = preview.contentDocument || preview.contentWindow.document;
+    const layerDiv = iframeDoc.getElementById('layer'+currentLayer);
     if(layerDiv){
         let code = layers[currentLayer] || '';
-        // Replace existing top and left
         code = code.replace(/top:\s*\d+px;/,'top:'+layerDiv.style.top+';');
         code = code.replace(/left:\s*\d+px;/,'left:'+layerDiv.style.left+';');
         layers[currentLayer] = code;
