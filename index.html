@@ -14,7 +14,6 @@
         background: #1e1e1e;
     }
 
-    /* Editor layout */
     .editor {
         display: flex;
         background: #1e1e1e;
@@ -42,7 +41,6 @@
         resize: none;
     }
 
-    /* Buttons */
     button {
         padding: 6px 12px;
         margin: 3px;
@@ -55,7 +53,6 @@
     .run-btn { background: #4caf50; }
     .clear-btn { background: #f44336; }
 
-    /* Preview iframe */
     iframe {
         width: 100%;
         height: 50vh;
@@ -68,19 +65,16 @@
 </head>
 <body>
 
-<!-- Buttons -->
 <div style="padding:5px;">
     <button class="run-btn" id="runBtn">Run</button>
     <button class="clear-btn" id="clearBtn">Clear</button>
 </div>
 
-<!-- Editor -->
 <div class="editor">
     <div class="lines" id="lineNumbers">1</div>
     <textarea id="code" spellcheck="false"></textarea>
 </div>
 
-<!-- Preview -->
 <iframe id="preview"></iframe>
 
 <script>
@@ -94,10 +88,9 @@ const preview = document.getElementById("preview");
 const runBtn = document.getElementById("runBtn");
 const clearBtn = document.getElementById("clearBtn");
 
-// Initialize editor with default code, but do NOT show in preview yet
+// Initialize editor with default code, but preview empty
 codeArea.value = defaultCode;
 
-// Update line numbers
 function updateLines() {
     const lineCount = codeArea.value.split("\n").length;
     lineNumbers.innerText = Array.from({length: lineCount}, (_, i) => i + 1).join("\n");
@@ -105,16 +98,15 @@ function updateLines() {
 codeArea.addEventListener("input", updateLines);
 updateLines();
 
-// Run button
 runBtn.addEventListener("click", function() {
     preview.srcdoc = codeArea.value;
 });
 
-// Clear button
+// Clear button now erases textarea completely and clears preview
 clearBtn.addEventListener("click", function() {
-    codeArea.value = defaultCode;
+    codeArea.value = "";       // completely clear editor
     updateLines();
-    preview.srcdoc = ""; // Clears the preview
+    preview.srcdoc = "";       // clear preview
 });
 </script>
 
