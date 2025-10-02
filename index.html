@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Light on Shape Demo</title>
+<title>Light on Multiple Shapes Demo</title>
 <style>
   body {
     margin: 0;
@@ -33,6 +33,7 @@
   }
 
   .run-btn { background: #4caf50; color: #fff; }
+  .shape2-btn { background: #f44336; color: #fff; }
   .light-btn { background: #ffeb3b; color: #000; }
   .move-btn { background: #2196F3; color: #fff; }
   .arrow-btn { width: 40px; height: 40px; font-size: 20px; background: #333; color: #fff; }
@@ -55,6 +56,17 @@
     overflow: hidden;
   }
 
+  .shape2 {
+    width: 100px;
+    height: 100px;
+    background: red;
+    border-radius: 50%;
+    position: absolute;
+    top: 50px;
+    left: 50px;
+    overflow: hidden;
+  }
+
   .light {
     width: 200px;
     height: 200px;
@@ -72,7 +84,8 @@
 <body>
 
 <div class="controls">
-  <button class="run-btn">Run</button>
+  <button class="run-btn">Green Square</button>
+  <button class="shape2-btn">Red Circle</button>
   <button class="light-btn">Light</button>
   <button class="move-btn">Move</button>
 </div>
@@ -88,29 +101,39 @@
 
 <script>
 const preview = document.getElementById('preview');
-const runBtn = document.querySelector('.run-btn');
+const greenBtn = document.querySelector('.run-btn');
+const redBtn = document.querySelector('.shape2-btn');
 const lightBtn = document.querySelector('.light-btn');
 const moveBtn = document.querySelector('.move-btn');
 const arrows = document.querySelector('.arrows');
 
-let shapeDiv = null;
+let lastShape = null;
 let lightDiv = null;
 
-// Run button: adds green square
-runBtn.addEventListener('click', () => {
-    preview.innerHTML = '';
-    shapeDiv = document.createElement('div');
+// Add green square
+greenBtn.addEventListener('click', () => {
+    const shapeDiv = document.createElement('div');
     shapeDiv.className = 'shape';
     preview.appendChild(shapeDiv);
-    lightDiv = null; // reset light
+    lastShape = shapeDiv;
+    lightDiv = null;
 });
 
-// Light button: adds light inside square
+// Add red circle
+redBtn.addEventListener('click', () => {
+    const shapeDiv = document.createElement('div');
+    shapeDiv.className = 'shape2';
+    preview.appendChild(shapeDiv);
+    lastShape = shapeDiv;
+    lightDiv = null;
+});
+
+// Light button: adds light inside last added shape
 lightBtn.addEventListener('click', () => {
-    if(!shapeDiv || lightDiv) return;
+    if(!lastShape || lightDiv) return;
     lightDiv = document.createElement('div');
     lightDiv.className = 'light';
-    shapeDiv.appendChild(lightDiv);
+    lastShape.appendChild(lightDiv);
 });
 
 // Move button toggles arrows
@@ -118,7 +141,7 @@ moveBtn.addEventListener('click', () => {
     arrows.style.display = arrows.style.display === 'flex' ? 'none' : 'flex';
 });
 
-// Arrow buttons: move the light
+// Arrow buttons: move the light inside the shape
 arrows.querySelectorAll('.arrow-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         if(!lightDiv) return;
