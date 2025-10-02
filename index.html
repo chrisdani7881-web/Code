@@ -40,8 +40,16 @@
     .clear-all-btn { background: #9c27b0; }
     .clear-all-btn:hover { background: #8e24aa; transform: scale(1.05); box-shadow: 0 0 10px rgba(156,39,176,0.7); }
 
-    .layer-btn { background: #555; }
-    .layer-btn.selected { background: yellow; color: black; }
+    .light-btn { background: #ffeb3b; color: black; }
+    .light-btn:hover { background: #fdd835; transform: scale(1.05); box-shadow: 0 0 10px rgba(255,235,59,0.7); }
+
+    .layer-btn {
+        background: #555;
+    }
+    .layer-btn.selected {
+        background: yellow;
+        color: black;
+    }
     .layer-btn:hover { background: #777; }
 
     .move-btn { background: #2196F3; }
@@ -50,18 +58,46 @@
     .save-btn { background: #ff9800; }
     .save-btn:hover { background: #fb8c00; }
 
-    .light-btn { background: #ffd700; }
-    .light-btn:hover { background: #ffc700; }
+    .arrow-btn {
+        background: #333;
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+    }
 
-    .arrow-btn { background: #333; width: 40px; height: 40px; font-size: 20px; }
+    .editor {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+    }
 
-    .editor { display: flex; flex: 1; overflow: hidden; }
+    .lines {
+        background: #2b2b2b;
+        padding: 5px;
+        text-align: right;
+        color: #777;
+        user-select: none;
+    }
 
-    .lines { background: #2b2b2b; padding: 5px; text-align: right; color: #777; user-select: none; }
+    textarea {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: inherit;
+        padding: 5px;
+        outline: none;
+        font-size: 14px;
+        line-height: 1.5;
+    }
 
-    textarea { flex: 1; background: transparent; border: none; color: inherit; padding: 5px; outline: none; font-size: 14px; line-height: 1.5; }
-
-    iframe { width: 100%; height: 40%; border: 1px solid #000; margin-top: 10px; background: #fff; border-radius: 8px; }
+    iframe {
+        width: 100%;
+        height: 40%;
+        border: 1px solid #000;
+        margin-top: 10px;
+        background: #fff;
+        border-radius: 8px;
+    }
 
     .arrow-container { display: none; gap: 5px; margin-top: 5px; }
 </style>
@@ -110,11 +146,12 @@ const lineNumbers = document.getElementById("lineNumbers");
 const preview = document.getElementById("preview");
 const arrowContainer = document.getElementById("arrowContainer");
 const layerBtns = document.querySelectorAll('.layer-btn');
+const lightBtn = document.querySelector('.light-btn');
 
 let currentLayer = 1;
 let layers = {
     1: '<div style="width:100px;height:100px;background:blue;border-radius:50%;position:absolute;top:50px;left:50px;"></div>',
-    2: '<div style="width:100px;height:100px;background:green;position:absolute;top:100px;left:100px;"></div>',
+    2: '<div style="width:0;height:0;border-left:50px solid transparent;border-right:50px solid transparent;border-bottom:100px solid red;position:absolute;top:50px;left:50px;"></div>',
     3:'',4:'',5:'',6:'',7:'',8:'',9:'',10:''
 };
 
@@ -134,19 +171,18 @@ function updateLines() {
 
 function runCode() {
     const doc = preview.contentDocument || preview.contentWindow.document;
-    doc.open();
-    doc.write('<!DOCTYPE html><html><head><style>body{margin:0;position:relative;}</style></head><body></body></html>');
-    doc.close();
-
-    Object.keys(layers).forEach(k => {
-        if(layers[k]) {
-            const layerDiv = doc.createElement('div');
-            layerDiv.id = 'layer'+k;
+    doc.body.innerHTML = ''; // Clear preview before running all layers
+    for(let i=1; i<=10; i++){
+        if(layers[i]){
+            let layerDiv = document.createElement('div');
+            layerDiv.id = 'layer'+i;
             layerDiv.style.position = 'absolute';
-            layerDiv.innerHTML = layers[k];
+            layerDiv.style.top = '50px';
+            layerDiv.style.left = '50px';
+            layerDiv.innerHTML = layers[i];
             doc.body.appendChild(layerDiv);
         }
-    });
+    }
 }
 
 function clearLayer() {
@@ -194,7 +230,22 @@ function saveLayerCode() {
     }
 }
 
-selectLayer(1); // Initialize
+selectLayer(1);
+
+// Light button functionality
+lightBtn.addEventListener('click', () => {
+    const doc = preview.contentDocument || preview.contentWindow.document;
+    const lightDiv = document.createElement('div');
+    lightDiv.style.width = '200px';
+    lightDiv.style.height = '200px';
+    lightDiv.style.borderRadius = '50%';
+    lightDiv.style.position = 'absolute';
+    lightDiv.style.top = '50px';
+    lightDiv.style.left = '50px';
+    lightDiv.style.background = 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 40%, rgba(255,255,0,0.2) 70%, rgba(255,255,0,0) 100%)';
+    lightDiv.style.filter = 'blur(15px)';
+    doc.body.appendChild(lightDiv);
+});
 </script>
 
 </body>
