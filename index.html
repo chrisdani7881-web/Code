@@ -3,175 +3,115 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Single Light on Multiple Shapes</title>
+<title>Single Light for Multiple Shapes</title>
 <style>
   body {
     margin: 0;
-    font-family: monospace;
-    background: #000;
-    color: #fff;
+    background: black;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     height: 100vh;
-  }
-
-  .controls {
-    display: flex;
-    gap: 5px;
-    margin-bottom: 10px;
-  }
-
-  button {
-    padding: 8px 14px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
     color: #fff;
+    font-family: monospace;
   }
-
-  .green-btn { background: #4caf50; }
-  .red-btn { background: #f44336; }
-  .light-btn { background: #ffeb3b; color: #000; }
-  .move-btn { background: #2196F3; }
+  .controls { margin: 10px; display: flex; gap: 10px; }
+  button { padding: 10px; font-size: 14px; cursor: pointer; }
 
   #preview {
+    position: relative;
     width: 400px;
     height: 400px;
-    background: #000;
-    position: relative;
-    border: 1px solid #555;
-  }
-
-  .shape, .shape2 {
-    position: absolute;
+    background: black;
+    border: 1px solid #333;
     overflow: hidden;
   }
 
   .shape {
-    width: 150px;
-    height: 150px;
-    background: green;
-    top: 125px;
-    left: 125px;
-  }
-
-  .shape2 {
-    width: 100px;
-    height: 100px;
-    background: red;
-    border-radius: 50%;
-    top: 50px;
-    left: 50px;
+    position: absolute;
   }
 
   .light {
     position: absolute;
-    width: 400px;
-    height: 400px;
-    top: 0;
-    left: 0;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
     background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 40%, rgba(255,255,0,0.2) 70%, rgba(255,255,0,0) 100%);
     filter: blur(15px);
     pointer-events: none;
-    mask-image: none; /* will be set dynamically */
-    -webkit-mask-image: none;
+    z-index: 0;
   }
-
-  .arrows { display: none; gap: 5px; margin-top: 5px; }
-  .arrow-btn { width: 40px; height: 40px; font-size: 20px; background: #333; color: #fff; }
 </style>
 </head>
 <body>
 
 <div class="controls">
-  <button class="green-btn">Green Square</button>
-  <button class="red-btn">Red Circle</button>
-  <button class="light-btn">Light</button>
-  <button class="move-btn">Move</button>
-</div>
-
-<div class="arrows">
-  <button class="arrow-btn" data-dx="0" data-dy="-10">↑</button>
-  <button class="arrow-btn" data-dx="0" data-dy="10">↓</button>
-  <button class="arrow-btn" data-dx="-10" data-dy="0">←</button>
-  <button class="arrow-btn" data-dx="10" data-dy="0">→</button>
+  <button id="runBtn">Run Shapes</button>
+  <button id="lightBtn">Add/Move Light</button>
+  <button onclick="moveLight(0,-10)">↑</button>
+  <button onclick="moveLight(0,10)">↓</button>
+  <button onclick="moveLight(-10,0)">←</button>
+  <button onclick="moveLight(10,0)">→</button>
 </div>
 
 <div id="preview"></div>
 
 <script>
 const preview = document.getElementById('preview');
-const greenBtn = document.querySelector('.green-btn');
-const redBtn = document.querySelector('.red-btn');
-const lightBtn = document.querySelector('.light-btn');
-const moveBtn = document.querySelector('.move-btn');
-const arrows = document.querySelector('.arrows');
 
-let lightDiv = null;
-let lightPos = {x: 0, y: 0};
+let shapes = [];
+let light = null;
 
-// Add shapes
-greenBtn.addEventListener('click', () => {
-    const div = document.createElement('div');
-    div.className = 'shape';
-    preview.appendChild(div);
-    updateMask();
-});
-redBtn.addEventListener('click', () => {
-    const div = document.createElement('div');
-    div.className = 'shape2';
-    preview.appendChild(div);
-    updateMask();
-});
+// Run Shapes
+document.getElementById('runBtn').addEventListener('click', () => {
+  // Clear previous shapes
+  preview.querySelectorAll('.shape').forEach(s => s.remove());
+  shapes = [];
 
-// Add single light
-lightBtn.addEventListener('click', () => {
-    if (!lightDiv) {
-        lightDiv = document.createElement('div');
-        lightDiv.className = 'light';
-        lightDiv.style.transform = `translate(${lightPos.x}px, ${lightPos.y}px)`;
-        preview.appendChild(lightDiv);
-        updateMask();
-    }
-});
+  // Example shapes
+  const square = document.createElement('div');
+  square.className = 'shape';
+  square.style.width = '100px';
+  square.style.height = '100px';
+  square.style.background = 'green';
+  square.style.top = '50px';
+  square.style.left = '50px';
+  preview.appendChild(square);
+  shapes.push(square);
 
-// Move button toggles arrows
-moveBtn.addEventListener('click', () => {
-    arrows.style.display = arrows.style.display === 'flex' ? 'none' : 'flex';
+  const circle = document.createElement('div');
+  circle.className = 'shape';
+  circle.style.width = '80px';
+  circle.style.height = '80px';
+  circle.style.background = 'blue';
+  circle.style.borderRadius = '50%';
+  circle.style.top = '200px';
+  circle.style.left = '150px';
+  preview.appendChild(circle);
+  shapes.push(circle);
 });
 
-// Move light with arrows
-arrows.querySelectorAll('.arrow-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const dx = parseInt(btn.dataset.dx);
-        const dy = parseInt(btn.dataset.dy);
-        lightPos.x += dx;
-        lightPos.y += dy;
-        if(lightDiv) lightDiv.style.transform = `translate(${lightPos.x}px, ${lightPos.y}px)`;
-    });
+// Add Light
+document.getElementById('lightBtn').addEventListener('click', () => {
+  if (!light) {
+    light = document.createElement('div');
+    light.className = 'light';
+    light.style.top = '100px';
+    light.style.left = '100px';
+    preview.appendChild(light);
+
+    // Ensure light is below shapes
+    preview.querySelectorAll('.shape').forEach(s => s.style.zIndex = 1);
+  }
 });
 
-// Update mask so light only shows on shapes
-function updateMask() {
-    if (!lightDiv) return;
-    const shapes = preview.querySelectorAll('.shape, .shape2');
-    let maskSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><mask id="m">`;
-    shapes.forEach((s,i) => {
-        const rect = s.getBoundingClientRect();
-        const previewRect = preview.getBoundingClientRect();
-        const top = rect.top - previewRect.top;
-        const left = rect.left - previewRect.left;
-        const width = rect.width;
-        const height = rect.height;
-        const rx = s.classList.contains('shape2') ? width/2 : 0;
-        maskSVG += `<rect x="${left}" y="${top}" width="${width}" height="${height}" rx="${rx}" fill="white"/>`;
-    });
-    maskSVG += `</mask><rect width="100%" height="100%" fill="white" mask="url(#m)"/></svg>`;
-    lightDiv.style.maskImage = `url('data:image/svg+xml;utf8,${encodeURIComponent(maskSVG)}')`;
-    lightDiv.style.webkitMaskImage = `url('data:image/svg+xml;utf8,${encodeURIComponent(maskSVG)}')`;
+// Move light
+function moveLight(dx, dy){
+  if(!light) return;
+  let top = parseInt(light.style.top || 0);
+  let left = parseInt(light.style.left || 0);
+  light.style.top = (top + dy) + 'px';
+  light.style.left = (left + dx) + 'px';
 }
 </script>
 
