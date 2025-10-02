@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Master Light with Mask</title>
+  <title>Light Clipped Inside Multiple Shapes</title>
   <style>
     body {
       background: black;
@@ -36,7 +36,7 @@
   </style>
 </head>
 <body>
-  <svg id="canvas" width="400" height="400">
+  <svg id="canvas" width="500" height="400">
     <defs>
       <!-- Gradient for light -->
       <radialGradient id="lightGradient" cx="50%" cy="50%" r="50%">
@@ -44,65 +44,53 @@
         <stop offset="100%" stop-color="black" stop-opacity="0" />
       </radialGradient>
 
-      <!-- Clip path for the shape -->
-      <clipPath id="shapeClip">
-        <rect id="shape" x="100" y="100" width="200" height="200" />
+      <!-- Clip paths for shapes -->
+      <clipPath id="shape1Clip">
+        <rect id="shape1" x="50" y="100" width="150" height="150" fill="blue"/>
+      </clipPath>
+      <clipPath id="shape2Clip">
+        <rect id="shape2" x="300" y="100" width="100" height="100" fill="red"/>
       </clipPath>
     </defs>
 
-    <!-- Visible shape -->
-    <rect x="100" y="100" width="200" height="200" fill="blue" />
+    <!-- Shapes visible -->
+    <rect x="50" y="100" width="150" height="150" fill="blue" />
+    <rect x="300" y="100" width="100" height="100" fill="red" />
 
-    <!-- Master light will be added dynamically -->
+    <!-- Master light (on top, unclipped) -->
+    <circle id="masterLight" cx="150" cy="175" r="80" fill="url(#lightGradient)" />
   </svg>
 
   <div class="controls">
-    <button onclick="addLight()">Add Light</button>
-    <button onclick="maskLight()">Mask Light</button><br>
-    <button onclick="moveLight(0, -10)">Up</button><br>
+    <button onclick="moveLight(0, -10)">Up</button>
     <button onclick="moveLight(-10, 0)">Left</button>
-    <button onclick="moveLight(10, 0)">Right</button><br>
+    <button onclick="moveLight(10, 0)">Right</button>
     <button onclick="moveLight(0, 10)">Down</button>
+    <button onclick="maskShape('shape1')">Mask Shape 1</button>
+    <button onclick="maskShape('shape2')">Mask Shape 2</button>
   </div>
 
   <script>
-    const canvas = document.getElementById("canvas");
-    let masterLight = null;
-    let cx = 200, cy = 200;
-
-    function addLight() {
-      if (masterLight) return; // only one master light
-      masterLight = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      masterLight.setAttribute("id", "masterLight");
-      masterLight.setAttribute("cx", cx);
-      masterLight.setAttribute("cy", cy);
-      masterLight.setAttribute("r", 100);
-      masterLight.setAttribute("fill", "url(#lightGradient)");
-      canvas.appendChild(masterLight);
-    }
+    const masterLight = document.getElementById("masterLight");
+    let cx = 150, cy = 175;
 
     function moveLight(dx, dy) {
-      if (!masterLight) return;
       cx += dx;
       cy += dy;
       masterLight.setAttribute("cx", cx);
       masterLight.setAttribute("cy", cy);
     }
 
-    function maskLight() {
-      if (!masterLight) return;
-
+    function maskShape(shapeId) {
+      const canvas = document.getElementById("canvas");
       // Clone master light
-      const maskedLight = masterLight.cloneNode(true);
-      maskedLight.removeAttribute("id"); // unique
-      maskedLight.setAttribute("clip-path", "url(#shapeClip)");
-
-      // Add to canvas above shape
-      canvas.appendChild(maskedLight);
-
-      // Remove the interactive master light
-      masterLight.remove();
-      masterLight = null;
+      const newLight = masterLight.cloneNode(true);
+      if(shapeId === 'shape1') {
+        newLight.setAttribute("clip-path", "url(#shape1Clip)");
+      } else if(shapeId === 'shape2') {
+        newLight.setAttribute("clip-path", "url(#shape2Clip)");
+      }
+      canvas.appendChild(newLight);
     }
   </script>
 </body>
