@@ -39,6 +39,7 @@
       font-family: monospace;
       padding: 5px;
     }
+    input { width: 50px; }
   </style>
 </head>
 <body>
@@ -66,6 +67,12 @@
     <button onclick="moveLight(0, 10)">Down</button><br>
     <button onclick="resizeLight(10)">Increase</button>
     <button onclick="resizeLight(-10)">Decrease</button>
+    <button onclick="adjustLightShape()">Adjust Light Shape</button>
+  </div>
+
+  <div>
+    Width: <input type="number" id="lightWidth" value="75">
+    Height: <input type="number" id="lightHeight" value="75">
   </div>
 
   <textarea id="shapeCode1">&lt;rect x="50" y="50" width="150" height="150" fill="blue" /&gt;</textarea>
@@ -81,14 +88,16 @@
     let masterLight = null;
     let cx = 125, cy = 125;
     let r = 75;
+    let rx = 75, ry = 75;
 
     function addLight() {
       if (masterLight) return;
-      masterLight = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      masterLight = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
       masterLight.setAttribute("id", "masterLight");
       masterLight.setAttribute("cx", cx);
       masterLight.setAttribute("cy", cy);
-      masterLight.setAttribute("r", r);
+      masterLight.setAttribute("rx", rx);
+      masterLight.setAttribute("ry", ry);
       masterLight.setAttribute("fill", "url(#lightGradient)");
       canvas.appendChild(masterLight);
     }
@@ -103,8 +112,20 @@
 
     function resizeLight(dr) {
       if (!masterLight) return;
-      r = Math.max(10, r + dr); // Prevent radius from going below 10
-      masterLight.setAttribute("r", r);
+      rx = Math.max(10, rx + dr);
+      ry = Math.max(10, ry + dr);
+      masterLight.setAttribute("rx", rx);
+      masterLight.setAttribute("ry", ry);
+    }
+
+    function adjustLightShape() {
+      if (!masterLight) return;
+      const newWidth = parseInt(document.getElementById("lightWidth").value);
+      const newHeight = parseInt(document.getElementById("lightHeight").value);
+      rx = Math.max(10, newWidth);
+      ry = Math.max(10, newHeight);
+      masterLight.setAttribute("rx", rx);
+      masterLight.setAttribute("ry", ry);
     }
 
     function maskLight() {
@@ -118,7 +139,7 @@
         light.setAttribute("clip-path", `url(#shapeClip${index+1})`);
         canvas.appendChild(light);
 
-        codeAreas[index].value += `\n<circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#lightGradient)" clip-path="url(#shapeClip${index+1})" />`;
+        codeAreas[index].value += `\n<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#lightGradient)" clip-path="url(#shapeClip${index+1})" />`;
       });
 
       masterLight.remove();
