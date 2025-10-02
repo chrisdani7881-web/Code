@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Master Light Reference</title>
+  <title>Master Light with Mask</title>
   <style>
     body {
       background: black;
@@ -46,18 +46,19 @@
 
       <!-- Clip path for the shape -->
       <clipPath id="shapeClip">
-        <rect id="shape" x="100" y="100" width="200" height="200" fill="blue"/>
+        <rect id="shape" x="100" y="100" width="200" height="200" />
       </clipPath>
     </defs>
 
-    <!-- Shape visible -->
+    <!-- Visible shape -->
     <rect x="100" y="100" width="200" height="200" fill="blue" />
 
-    <!-- Light will be added dynamically -->
+    <!-- Master light will be added dynamically -->
   </svg>
 
   <div class="controls">
-    <button onclick="addLight()">Add Light</button><br>
+    <button onclick="addLight()">Add Light</button>
+    <button onclick="maskLight()">Mask Light</button><br>
     <button onclick="moveLight(0, -10)">Up</button><br>
     <button onclick="moveLight(-10, 0)">Left</button>
     <button onclick="moveLight(10, 0)">Right</button><br>
@@ -66,27 +67,42 @@
 
   <script>
     const canvas = document.getElementById("canvas");
-    let light = null;
+    let masterLight = null;
     let cx = 200, cy = 200;
 
     function addLight() {
-      if (light) return; // only one master light
-      light = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      light.setAttribute("id", "masterLight");
-      light.setAttribute("cx", cx);
-      light.setAttribute("cy", cy);
-      light.setAttribute("r", 100);
-      light.setAttribute("fill", "url(#lightGradient)");
-      // for now not clipped, this is just the reference
-      canvas.appendChild(light);
+      if (masterLight) return; // only one master light
+      masterLight = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      masterLight.setAttribute("id", "masterLight");
+      masterLight.setAttribute("cx", cx);
+      masterLight.setAttribute("cy", cy);
+      masterLight.setAttribute("r", 100);
+      masterLight.setAttribute("fill", "url(#lightGradient)");
+      canvas.appendChild(masterLight);
     }
 
     function moveLight(dx, dy) {
-      if (!light) return;
+      if (!masterLight) return;
       cx += dx;
       cy += dy;
-      light.setAttribute("cx", cx);
-      light.setAttribute("cy", cy);
+      masterLight.setAttribute("cx", cx);
+      masterLight.setAttribute("cy", cy);
+    }
+
+    function maskLight() {
+      if (!masterLight) return;
+
+      // Clone master light
+      const maskedLight = masterLight.cloneNode(true);
+      maskedLight.removeAttribute("id"); // unique
+      maskedLight.setAttribute("clip-path", "url(#shapeClip)");
+
+      // Add to canvas above shape
+      canvas.appendChild(maskedLight);
+
+      // Remove the interactive master light
+      masterLight.remove();
+      masterLight = null;
     }
   </script>
 </body>
