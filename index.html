@@ -103,7 +103,6 @@
 </style>
 </head>
 <body>
-
 <div class="editor-controls">
     <button class="run-btn" onclick="runCode()">Run</button>
     <button class="clear-btn" onclick="clearLayer()">Clear</button>
@@ -139,7 +138,6 @@
 </div>
 
 <iframe id="preview"></iframe>
-
 <script>
 const codeArea = document.getElementById("code");
 const lineNumbers = document.getElementById("lineNumbers");
@@ -155,6 +153,7 @@ let layers = {
     3:'',4:'',5:'',6:'',7:'',8:'',9:'',10:''
 };
 
+// Layer selection
 function selectLayer(num) {
     currentLayer = num;
     layerBtns.forEach(b => b.classList.remove('selected'));
@@ -163,15 +162,17 @@ function selectLayer(num) {
     updateLines();
 }
 
+// Line numbers
 function updateLines() {
     const code = codeArea.value;
     const lineCount = code.split("\n").length;
     lineNumbers.innerText = Array.from({length: lineCount}, (_, i) => i + 1).join("\n");
 }
 
+// Run all layers at once
 function runCode() {
     const doc = preview.contentDocument || preview.contentWindow.document;
-    doc.body.innerHTML = ''; // Clear preview before running all layers
+    doc.body.innerHTML = '';
     for(let i=1; i<=10; i++){
         if(layers[i]){
             let layerDiv = document.createElement('div');
@@ -185,6 +186,7 @@ function runCode() {
     }
 }
 
+// Clear current layer
 function clearLayer() {
     layers[currentLayer] = '';
     codeArea.value = '';
@@ -194,6 +196,7 @@ function clearLayer() {
     if(layerDiv) doc.body.removeChild(layerDiv);
 }
 
+// Clear all layers
 function clearAll() {
     Object.keys(layers).forEach(k=>layers[k]='');
     codeArea.value = '';
@@ -202,10 +205,12 @@ function clearAll() {
     doc.body.innerHTML='';
 }
 
+// Toggle move arrows
 function toggleMove() {
     arrowContainer.style.display = arrowContainer.style.display==='flex'?'none':'flex';
 }
 
+// Move selected layer
 function moveSelectedLayer(dx,dy) {
     const doc = preview.contentDocument || preview.contentWindow.document;
     const layerDiv = doc.getElementById('layer'+currentLayer);
@@ -217,6 +222,7 @@ function moveSelectedLayer(dx,dy) {
     }
 }
 
+// Save layer code
 function saveLayerCode() {
     const doc = preview.contentDocument || preview.contentWindow.document;
     const layerDiv = doc.getElementById('layer'+currentLayer);
@@ -230,9 +236,10 @@ function saveLayerCode() {
     }
 }
 
+// Initialize
 selectLayer(1);
 
-// Light button functionality
+// Light button placeholder: creates soft yellow-white circle
 lightBtn.addEventListener('click', () => {
     const doc = preview.contentDocument || preview.contentWindow.document;
     const lightDiv = document.createElement('div');
@@ -247,6 +254,3 @@ lightBtn.addEventListener('click', () => {
     doc.body.appendChild(lightDiv);
 });
 </script>
-
-</body>
-</html>
