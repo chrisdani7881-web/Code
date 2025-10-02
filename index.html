@@ -3,44 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Single Light for Multiple Shapes</title>
+<title>Light on Shapes</title>
 <style>
-  body {
-    margin: 0;
-    background: black;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: 100vh;
-    color: #fff;
-    font-family: monospace;
-  }
-  .controls { margin: 10px; display: flex; gap: 10px; }
-  button { padding: 10px; font-size: 14px; cursor: pointer; }
-
-  #preview {
-    position: relative;
-    width: 400px;
-    height: 400px;
-    background: black;
-    border: 1px solid #333;
-    overflow: hidden;
-  }
-
-  .shape {
-    position: absolute;
-  }
-
-  .light {
-    position: absolute;
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 40%, rgba(255,255,0,0.2) 70%, rgba(255,255,0,0) 100%);
-    filter: blur(15px);
-    pointer-events: none;
-    z-index: 0;
-  }
+body {
+  margin: 0;
+  background: black;
+  font-family: monospace;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100vh;
+}
+.controls { margin: 10px; display: flex; gap: 10px; }
+button { padding: 10px; font-size: 14px; cursor: pointer; }
+#preview {
+  position: relative;
+  width: 400px;
+  height: 400px;
+  background: black;
+  border: 1px solid #333;
+  overflow: hidden;
+}
+.shape {
+  position: absolute;
+}
+.light {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 40%, rgba(255,255,0,0.2) 70%, rgba(255,255,0,0) 100%);
+  filter: blur(15px);
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
 </style>
 </head>
 <body>
@@ -58,7 +55,6 @@
 
 <script>
 const preview = document.getElementById('preview');
-
 let shapes = [];
 let light = null;
 
@@ -68,7 +64,7 @@ document.getElementById('runBtn').addEventListener('click', () => {
   preview.querySelectorAll('.shape').forEach(s => s.remove());
   shapes = [];
 
-  // Example shapes
+  // Green square
   const square = document.createElement('div');
   square.className = 'shape';
   square.style.width = '100px';
@@ -79,6 +75,7 @@ document.getElementById('runBtn').addEventListener('click', () => {
   preview.appendChild(square);
   shapes.push(square);
 
+  // Blue circle
   const circle = document.createElement('div');
   circle.className = 'shape';
   circle.style.width = '80px';
@@ -89,19 +86,19 @@ document.getElementById('runBtn').addEventListener('click', () => {
   circle.style.left = '150px';
   preview.appendChild(circle);
   shapes.push(circle);
+
+  // Ensure light is below shapes
+  if(light) preview.appendChild(light);
 });
 
 // Add Light
 document.getElementById('lightBtn').addEventListener('click', () => {
-  if (!light) {
+  if(!light) {
     light = document.createElement('div');
     light.className = 'light';
     light.style.top = '100px';
     light.style.left = '100px';
     preview.appendChild(light);
-
-    // Ensure light is below shapes
-    preview.querySelectorAll('.shape').forEach(s => s.style.zIndex = 1);
   }
 });
 
@@ -110,8 +107,8 @@ function moveLight(dx, dy){
   if(!light) return;
   let top = parseInt(light.style.top || 0);
   let left = parseInt(light.style.left || 0);
-  light.style.top = (top + dy) + 'px';
-  light.style.left = (left + dx) + 'px';
+  light.style.top = (top + dy)+'px';
+  light.style.left = (left + dx)+'px';
 }
 </script>
 
