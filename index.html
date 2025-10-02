@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Light Clipped Inside Multiple Shapes</title>
+  <title>Light Masked on Multiple Shapes</title>
   <style>
     body {
       background: black;
@@ -38,7 +38,6 @@
 <body>
   <svg id="canvas" width="500" height="400">
     <defs>
-      <!-- Gradient for light -->
       <radialGradient id="lightGradient" cx="50%" cy="50%" r="50%">
         <stop offset="0%" stop-color="white" stop-opacity="1" />
         <stop offset="100%" stop-color="black" stop-opacity="0" />
@@ -46,18 +45,18 @@
 
       <!-- Clip paths for shapes -->
       <clipPath id="shape1Clip">
-        <rect id="shape1" x="50" y="100" width="150" height="150" fill="blue"/>
+        <rect x="50" y="100" width="150" height="150" />
       </clipPath>
       <clipPath id="shape2Clip">
-        <rect id="shape2" x="300" y="100" width="100" height="100" fill="red"/>
+        <rect x="300" y="100" width="100" height="100" />
       </clipPath>
     </defs>
 
-    <!-- Shapes visible -->
-    <rect x="50" y="100" width="150" height="150" fill="blue" />
-    <rect x="300" y="100" width="100" height="100" fill="red" />
+    <!-- Shapes -->
+    <rect id="shape1" x="50" y="100" width="150" height="150" fill="blue" />
+    <rect id="shape2" x="300" y="100" width="100" height="100" fill="red" />
 
-    <!-- Master light (on top, unclipped) -->
+    <!-- Master light -->
     <circle id="masterLight" cx="150" cy="175" r="80" fill="url(#lightGradient)" />
   </svg>
 
@@ -66,12 +65,12 @@
     <button onclick="moveLight(-10, 0)">Left</button>
     <button onclick="moveLight(10, 0)">Right</button>
     <button onclick="moveLight(0, 10)">Down</button>
-    <button onclick="maskShape('shape1')">Mask Shape 1</button>
-    <button onclick="maskShape('shape2')">Mask Shape 2</button>
+    <button onclick="applyMask()">Mask</button>
   </div>
 
   <script>
     const masterLight = document.getElementById("masterLight");
+    const canvas = document.getElementById("canvas");
     let cx = 150, cy = 175;
 
     function moveLight(dx, dy) {
@@ -81,16 +80,22 @@
       masterLight.setAttribute("cy", cy);
     }
 
-    function maskShape(shapeId) {
-      const canvas = document.getElementById("canvas");
-      // Clone master light
-      const newLight = masterLight.cloneNode(true);
-      if(shapeId === 'shape1') {
-        newLight.setAttribute("clip-path", "url(#shape1Clip)");
-      } else if(shapeId === 'shape2') {
-        newLight.setAttribute("clip-path", "url(#shape2Clip)");
-      }
-      canvas.appendChild(newLight);
+    function applyMask() {
+      // Remove previous masked lights
+      document.querySelectorAll('.maskedLight').forEach(el => el.remove());
+
+      // List of shapes and corresponding clip paths
+      const shapes = [
+        { clip: 'shape1Clip' },
+        { clip: 'shape2Clip' }
+      ];
+
+      shapes.forEach(s => {
+        const newLight = masterLight.cloneNode(true);
+        newLight.classList.add('maskedLight');
+        newLight.setAttribute('clip-path', `url(#${s.clip})`);
+        canvas.appendChild(newLight);
+      });
     }
   </script>
 </body>
