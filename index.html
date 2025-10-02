@@ -22,7 +22,7 @@ button {
     cursor: pointer;
     font-size: 14px;
     color: #fff;
-    font-family: 'Courier New', Courier, monospace; /* prettier text */
+    font-family: 'Courier New', Courier, monospace;
     transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 .run-btn { background: #4caf50; }
@@ -121,11 +121,12 @@ function updateLines() {
     lineNumbers.innerText = Array.from({length: lineCount}, (_, i) => i + 1).join("\n");
 }
 
-// ** Run whatever is in textarea immediately **
+// ** Run all layers simultaneously **
 function runCode() {
     const doc = preview.contentDocument || preview.contentWindow.document;
     doc.open();
-    doc.write(codeArea.value);
+    const allLayersCode = Object.values(layers).join('\n');
+    doc.write(allLayersCode);
     doc.close();
 }
 
@@ -182,24 +183,5 @@ function saveLayerCode() {
     const layerDiv = doc.getElementById('layer'+currentLayer);
     if(layerDiv){
         let code = layers[currentLayer] || '';
-        // Update top, left, rotation
         code = code.replace(/top:\s*\d+px;/,'top:'+layerDiv.style.top+';');
-        code = code.replace(/left:\s*\d+px;/,'left:'+layerDiv.style.left+';');
-        if(rotation[currentLayer]){
-            if(code.includes('transform:')) {
-                code = code.replace(/transform:[^;]+;/,'transform:rotate('+rotation[currentLayer]+'deg);');
-            } else {
-                code += 'transform:rotate('+rotation[currentLayer]+'deg);';
-            }
-        }
-        layers[currentLayer] = code;
-        codeArea.value = code;
-        updateLines();
-    }
-}
-
-selectLayer(1);
-</script>
-
-</body>
-</html>
+        code = code.replace(/left:\
