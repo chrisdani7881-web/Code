@@ -3,92 +3,100 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Light Test</title>
+<title>Light on Shape</title>
 <style>
-    body {
-        margin: 0;
-        font-family: monospace;
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-        background: #1e1e1e;
-        color: #fff;
-        align-items: center;
-        padding: 10px;
-        gap: 10px;
-    }
-    button {
-        padding: 8px 14px;
-        font-size: 16px;
-        cursor: pointer;
-        border: none;
-        border-radius: 5px;
-    }
-    .run-btn { background: #4caf50; color: #fff; }
-    .light-btn { background: #ffeb3b; color: #000; }
-    iframe {
-        width: 80%;
-        height: 60%;
-        border: 1px solid #000;
-        border-radius: 8px;
-        background: #fff;
-    }
+  body {
+    margin: 0;
+    background: black;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+
+  #controls { margin-bottom: 20px; }
+  button { padding: 10px 20px; margin-right: 10px; cursor: pointer; }
+
+  #preview {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    background: black;
+  }
+
+  .shape {
+    width: 150px;
+    height: 150px;
+    background: green;
+    position: absolute;
+    top: 75px;
+    left: 75px;
+  }
+
+  .light {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    position: absolute;
+    top: 50px;
+    left: 50px;
+    background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,0,0.2) 70%, rgba(255,255,0,0) 100%);
+    filter: blur(15px);
+    /* Mask so light only shows on shape */
+    -webkit-mask-image: url(#mask-shape);
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: 150px 150px;
+    mask-image: url(#mask-shape);
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: 150px 150px;
+  }
 </style>
 </head>
 <body>
 
-<div>
-    <button class="run-btn">Run Shape</button>
-    <button class="light-btn">Add Light</button>
+<div id="controls">
+  <button id="runBtn">Run</button>
+  <button id="lightBtn">Light</button>
 </div>
 
-<iframe id="preview"></iframe>
+<div id="preview"></div>
+
+<!-- SVG mask definition -->
+<svg width="0" height="0">
+  <defs>
+    <mask id="mask-shape">
+      <rect x="0" y="0" width="150" height="150" fill="white"/>
+    </mask>
+  </defs>
+</svg>
 
 <script>
 const preview = document.getElementById('preview');
-const runBtn = document.querySelector('.run-btn');
-const lightBtn = document.querySelector('.light-btn');
+const runBtn = document.getElementById('runBtn');
+const lightBtn = document.getElementById('lightBtn');
 
-let lightActive = false;
+let lightAdded = false;
 
-// Run basic shape
 runBtn.addEventListener('click', () => {
-    const doc = preview.contentDocument || preview.contentWindow.document;
-    doc.open();
-    doc.write('<div id="shape" style="width:150px;height:150px;background:green;position:absolute;top:100px;left:100px;"></div>');
-    doc.close();
+  preview.innerHTML = '';
+  const square = document.createElement('div');
+  square.className = 'shape';
+  preview.appendChild(square);
 
-    if(lightActive){
-        addLight();
-    }
+  if (lightAdded) {
+    const light = document.createElement('div');
+    light.className = 'light';
+    preview.appendChild(light);
+  }
 });
 
-// Add soft light circle
-function addLight() {
-    const doc = preview.contentDocument || preview.contentWindow.document;
-    const existing = doc.getElementById('light');
-    if(existing) existing.remove();
-
-    const lightDiv = doc.createElement('div');
-    lightDiv.id = 'light';
-    lightDiv.style.width = '200px';
-    lightDiv.style.height = '200px';
-    lightDiv.style.borderRadius = '50%';
-    lightDiv.style.position = 'absolute';
-    lightDiv.style.top = '90px';
-    lightDiv.style.left = '90px';
-    lightDiv.style.background = 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 40%, rgba(255,255,0,0.2) 70%, rgba(255,255,0,0) 100%)';
-    lightDiv.style.filter = 'blur(15px)';
-    lightDiv.style.pointerEvents = 'none';
-    lightDiv.style.mixBlendMode = 'screen';
-
-    doc.body.appendChild(lightDiv);
-}
-
-// Toggle light on/off
 lightBtn.addEventListener('click', () => {
-    lightActive = !lightActive;
-    addLight();
+  lightAdded = true;
+  // Optionally run immediately
+  runBtn.click();
 });
 </script>
 
