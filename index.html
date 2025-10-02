@@ -3,113 +3,153 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Light on Shapes</title>
+<title>Light on Multiple Shapes Demo</title>
 <style>
-body {
-  margin: 0;
-  background: black;
-  font-family: monospace;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 100vh;
-}
-.controls { margin: 10px; display: flex; gap: 10px; }
-button { padding: 10px; font-size: 14px; cursor: pointer; }
-#preview {
-  position: relative;
-  width: 400px;
-  height: 400px;
-  background: black;
-  border: 1px solid #333;
-  overflow: hidden;
-}
-.shape {
-  position: absolute;
-}
-.light {
-  position: absolute;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 40%, rgba(255,255,0,0.2) 70%, rgba(255,255,0,0) 100%);
-  filter: blur(15px);
-  pointer-events: none;
-  mix-blend-mode: screen;
-}
+  body {
+    margin: 0;
+    font-family: monospace;
+    background: #000;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .controls {
+    margin-bottom: 10px;
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .run-btn { background: #4caf50; color: #fff; }
+  .shape2-btn { background: #f44336; color: #fff; }
+  .light-btn { background: #ffeb3b; color: #000; }
+  .move-btn { background: #2196F3; color: #fff; }
+  .arrow-btn { width: 40px; height: 40px; font-size: 20px; background: #333; color: #fff; }
+
+  #preview {
+    width: 400px;
+    height: 400px;
+    background: #000;
+    position: relative;
+    border: 1px solid #555;
+    overflow: hidden;
+  }
+
+  .shape {
+    width: 150px;
+    height: 150px;
+    background: green;
+    position: absolute;
+    top: 125px;
+    left: 125px;
+    border-radius: 0;
+  }
+
+  .shape2 {
+    width: 100px;
+    height: 100px;
+    background: red;
+    border-radius: 50%;
+    position: absolute;
+    top: 50px;
+    left: 50px;
+  }
+
+  .light {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    position: absolute;
+    top: 100px;
+    left: 100px;
+    background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 40%, rgba(255,255,0,0.2) 70%, rgba(255,255,0,0) 100%);
+    filter: blur(15px);
+    pointer-events: none;
+    mix-blend-mode: lighten;
+  }
+
+  .arrows { display: none; gap: 5px; margin-top: 5px; }
 </style>
 </head>
 <body>
 
 <div class="controls">
-  <button id="runBtn">Run Shapes</button>
-  <button id="lightBtn">Add/Move Light</button>
-  <button onclick="moveLight(0,-10)">↑</button>
-  <button onclick="moveLight(0,10)">↓</button>
-  <button onclick="moveLight(-10,0)">←</button>
-  <button onclick="moveLight(10,0)">→</button>
+  <button class="run-btn">Green Square</button>
+  <button class="shape2-btn">Red Circle</button>
+  <button class="light-btn">Light</button>
+  <button class="move-btn">Move</button>
+</div>
+
+<div class="arrows">
+  <button class="arrow-btn" data-dx="0" data-dy="-10">↑</button>
+  <button class="arrow-btn" data-dx="0" data-dy="10">↓</button>
+  <button class="arrow-btn" data-dx="-10" data-dy="0">←</button>
+  <button class="arrow-btn" data-dx="10" data-dy="0">→</button>
 </div>
 
 <div id="preview"></div>
 
 <script>
 const preview = document.getElementById('preview');
-let shapes = [];
-let light = null;
+const greenBtn = document.querySelector('.run-btn');
+const redBtn = document.querySelector('.shape2-btn');
+const lightBtn = document.querySelector('.light-btn');
+const moveBtn = document.querySelector('.move-btn');
+const arrows = document.querySelector('.arrows');
 
-// Run Shapes
-document.getElementById('runBtn').addEventListener('click', () => {
-  // Clear previous shapes
-  preview.querySelectorAll('.shape').forEach(s => s.remove());
-  shapes = [];
+let lightDiv = null;
 
-  // Green square
-  const square = document.createElement('div');
-  square.className = 'shape';
-  square.style.width = '100px';
-  square.style.height = '100px';
-  square.style.background = 'green';
-  square.style.top = '50px';
-  square.style.left = '50px';
-  preview.appendChild(square);
-  shapes.push(square);
-
-  // Blue circle
-  const circle = document.createElement('div');
-  circle.className = 'shape';
-  circle.style.width = '80px';
-  circle.style.height = '80px';
-  circle.style.background = 'blue';
-  circle.style.borderRadius = '50%';
-  circle.style.top = '200px';
-  circle.style.left = '150px';
-  preview.appendChild(circle);
-  shapes.push(circle);
-
-  // Ensure light is below shapes
-  if(light) preview.appendChild(light);
+// Add green square
+greenBtn.addEventListener('click', () => {
+    const shapeDiv = document.createElement('div');
+    shapeDiv.className = 'shape';
+    preview.appendChild(shapeDiv);
 });
 
-// Add Light
-document.getElementById('lightBtn').addEventListener('click', () => {
-  if(!light) {
-    light = document.createElement('div');
-    light.className = 'light';
-    light.style.top = '100px';
-    light.style.left = '100px';
-    preview.appendChild(light);
-  }
+// Add red circle
+redBtn.addEventListener('click', () => {
+    const shapeDiv = document.createElement('div');
+    shapeDiv.className = 'shape2';
+    preview.appendChild(shapeDiv);
 });
 
-// Move light
-function moveLight(dx, dy){
-  if(!light) return;
-  let top = parseInt(light.style.top || 0);
-  let left = parseInt(light.style.left || 0);
-  light.style.top = (top + dy)+'px';
-  light.style.left = (left + dx)+'px';
-}
+// Light button: adds light above all shapes
+lightBtn.addEventListener('click', () => {
+    if(lightDiv) return;
+    lightDiv = document.createElement('div');
+    lightDiv.className = 'light';
+    preview.appendChild(lightDiv);
+});
+
+// Move button toggles arrows
+moveBtn.addEventListener('click', () => {
+    arrows.style.display = arrows.style.display === 'flex' ? 'none' : 'flex';
+});
+
+// Arrow buttons: move the light
+arrows.querySelectorAll('.arrow-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if(!lightDiv) return;
+        let top = parseInt(lightDiv.style.top || 0);
+        let left = parseInt(lightDiv.style.left || 0);
+        const dx = parseInt(btn.dataset.dx);
+        const dy = parseInt(btn.dataset.dy);
+        lightDiv.style.top = (top + dy) + 'px';
+        lightDiv.style.left = (left + dx) + 'px';
+    });
+});
 </script>
 
 </body>
