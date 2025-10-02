@@ -3,49 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Layer-Specific Light Mask</title>
+<title>Master Light Masking Demo</title>
 <style>
-  body {
-    margin: 0;
-    font-family: monospace;
-    background: #000;
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-  }
-
-  .controls { margin-bottom: 10px; display: flex; gap: 5px; flex-wrap: wrap; }
-  button { padding: 8px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-
-  .shape1-btn { background: #4caf50; color: #fff; }
-  .shape2-btn { background: #f44336; color: #fff; }
-  .light-btn { background: #ffeb3b; color: #000; }
-  .move-btn { background: #2196F3; color: #fff; }
-  .mask-btn { background: #9c27b0; color: #fff; }
-
-  .arrow-btn { width: 40px; height: 40px; font-size: 20px; background: #333; color: #fff; }
-
-  #preview { width: 400px; height: 400px; background: #000; position: relative; border: 1px solid #555; overflow: hidden; }
-
-  .shape { width: 150px; height: 150px; background: green; position: absolute; top: 125px; left: 125px; overflow: hidden; }
-  .shape2 { width: 100px; height: 100px; background: red; border-radius: 50%; position: absolute; top: 50px; left: 50px; overflow: hidden; }
-
-  .light {
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    position: absolute;
-    top: 0;
-    left: 0;
+  body { margin:0; font-family:monospace; background:#000; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; }
+  .controls { margin-bottom:10px; display:flex; gap:5px; flex-wrap:wrap; }
+  button { padding:8px 14px; border:none; border-radius:4px; cursor:pointer; font-size:14px; }
+  .shape1-btn { background:#4caf50; color:#fff; }
+  .shape2-btn { background:#f44336; color:#fff; }
+  .light-btn { background:#ffeb3b; color:#000; }
+  .mask-btn { background:#9c27b0; color:#fff; }
+  #preview { width:400px; height:400px; background:#000; position:relative; border:1px solid #555; overflow:hidden; }
+  .shape { width:150px; height:150px; background:green; position:absolute; top:125px; left:125px; overflow:hidden; }
+  .shape2 { width:100px; height:100px; background:red; border-radius:50%; position:absolute; top:50px; left:50px; overflow:hidden; }
+  .light { width:200px; height:200px; border-radius:50%; position:absolute;
     background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 40%, rgba(255,255,0,0.2) 70%, rgba(255,255,0,0) 100%);
-    filter: blur(15px);
-    pointer-events: none;
+    filter: blur(15px); top:0; left:0;
   }
-
-  .arrows { display: none; gap: 5px; margin-top: 5px; }
 </style>
 </head>
 <body>
@@ -53,16 +26,8 @@
 <div class="controls">
   <button class="shape1-btn">Add Green Square</button>
   <button class="shape2-btn">Add Red Circle</button>
-  <button class="light-btn">Add Light</button>
-  <button class="move-btn">Move Light</button>
-  <button class="mask-btn">Mask Selected</button>
-</div>
-
-<div class="arrows">
-  <button class="arrow-btn" data-dx="0" data-dy="-10">↑</button>
-  <button class="arrow-btn" data-dx="0" data-dy="10">↓</button>
-  <button class="arrow-btn" data-dx="-10" data-dy="0">←</button>
-  <button class="arrow-btn" data-dx="10" data-dy="0">→</button>
+  <button class="light-btn">Master Light</button>
+  <button class="mask-btn">Mask Light Per Layer</button>
 </div>
 
 <div id="preview"></div>
@@ -72,13 +37,10 @@ const preview = document.getElementById('preview');
 const greenBtn = document.querySelector('.shape1-btn');
 const redBtn = document.querySelector('.shape2-btn');
 const lightBtn = document.querySelector('.light-btn');
-const moveBtn = document.querySelector('.move-btn');
 const maskBtn = document.querySelector('.mask-btn');
-const arrows = document.querySelector('.arrows');
 
 let layers = [];
-let lightDiv = null;
-let selectedShape = null;
+let masterLight = null;
 
 // Add shapes
 greenBtn.addEventListener('click', () => {
@@ -86,7 +48,6 @@ greenBtn.addEventListener('click', () => {
     shape.className = 'shape';
     preview.appendChild(shape);
     layers.push(shape);
-    selectedShape = shape;
 });
 
 redBtn.addEventListener('click', () => {
@@ -94,50 +55,55 @@ redBtn.addEventListener('click', () => {
     shape.className = 'shape2';
     preview.appendChild(shape);
     layers.push(shape);
-    selectedShape = shape;
 });
 
-// Add global light
+// Add master light
 lightBtn.addEventListener('click', () => {
-    if(lightDiv) return;
-    lightDiv = document.createElement('div');
-    lightDiv.className = 'light';
-    preview.appendChild(lightDiv);
+    if(masterLight) return;
+    masterLight = document.createElement('div');
+    masterLight.className = 'light';
+    masterLight.style.top = '0px';
+    masterLight.style.left = '0px';
+    preview.appendChild(masterLight);
+    // Make light draggable
+    masterLight.onmousedown = function(e) {
+        e.preventDefault();
+        let shiftX = e.clientX - masterLight.getBoundingClientRect().left;
+        let shiftY = e.clientY - masterLight.getBoundingClientRect().top;
+
+        function moveAt(pageX, pageY) {
+            masterLight.style.left = pageX - shiftX - preview.getBoundingClientRect().left + 'px';
+            masterLight.style.top = pageY - shiftY - preview.getBoundingClientRect().top + 'px';
+        }
+
+        function onMouseMove(e) { moveAt(e.pageX, e.pageY); }
+
+        document.addEventListener('mousemove', onMouseMove);
+
+        masterLight.onmouseup = function() {
+            document.removeEventListener('mousemove', onMouseMove);
+            masterLight.onmouseup = null;
+        };
+    };
+    masterLight.ondragstart = () => false;
 });
 
-// Toggle move arrows
-moveBtn.addEventListener('click', () => {
-    arrows.style.display = arrows.style.display === 'flex' ? 'none' : 'flex';
-});
-
-// Move light
-arrows.querySelectorAll('.arrow-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        if(!lightDiv) return;
-        const dx = parseInt(btn.dataset.dx);
-        const dy = parseInt(btn.dataset.dy);
-        const top = parseInt(lightDiv.style.top || 0);
-        const left = parseInt(lightDiv.style.left || 0);
-        lightDiv.style.top = (top + dy) + 'px';
-        lightDiv.style.left = (left + dx) + 'px';
-    });
-});
-
-// Select a shape by clicking
-preview.addEventListener('click', e => {
-    if(e.target.classList.contains('shape') || e.target.classList.contains('shape2')) {
-        selectedShape = e.target;
-    }
-});
-
-// Mask light to selected shape
+// Mask light per layer
 maskBtn.addEventListener('click', () => {
-    if(!lightDiv || !selectedShape) return;
-    const lightClone = lightDiv.cloneNode(true);
-    // Constrain light inside shape
-    lightClone.style.top = (parseInt(lightDiv.style.top) - selectedShape.offsetTop) + 'px';
-    lightClone.style.left = (parseInt(lightDiv.style.left) - selectedShape.offsetLeft) + 'px';
-    selectedShape.appendChild(lightClone);
+    if(!masterLight) return;
+    layers.forEach(shape => {
+        const light = document.createElement('div');
+        light.className = 'light';
+        // Match position of master light relative to preview
+        const masterRect = masterLight.getBoundingClientRect();
+        const previewRect = preview.getBoundingClientRect();
+        const shapeRect = shape.getBoundingClientRect();
+        light.style.left = (masterRect.left - shapeRect.left) + 'px';
+        light.style.top = (masterRect.top - shapeRect.top) + 'px';
+        // Clip light to shape
+        light.style.clipPath = shape.style.borderRadius ? `circle(50% at 50% 50%)` : `inset(0%)`;
+        shape.appendChild(light);
+    });
 });
 </script>
 
