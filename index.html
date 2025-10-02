@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Light on Multiple Shapes Demo</title>
+<title>Shapes with Light</title>
 <style>
   body {
     margin: 0;
@@ -12,72 +12,29 @@
     color: #fff;
     display: flex;
     flex-direction: column;
-    height: 100vh;
     align-items: center;
     justify-content: center;
+    height: 100vh;
   }
 
-  .controls {
-    margin-bottom: 10px;
-    display: flex;
-    gap: 5px;
-    flex-wrap: wrap;
-  }
-
-  button {
-    padding: 8px 14px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-  }
+  .controls { margin-bottom: 10px; display: flex; gap: 5px; flex-wrap: wrap; }
+  button { padding: 8px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
 
   .run-btn { background: #4caf50; color: #fff; }
+  .shape1-btn { background: #2196F3; color: #fff; }
   .shape2-btn { background: #f44336; color: #fff; }
   .light-btn { background: #ffeb3b; color: #000; }
-  .move-btn { background: #2196F3; color: #fff; }
+  .move-btn { background: #9c27b0; color: #fff; }
   .arrow-btn { width: 40px; height: 40px; font-size: 20px; background: #333; color: #fff; }
 
-  #preview {
-    width: 400px;
-    height: 400px;
-    background: #000;
-    position: relative;
-    border: 1px solid #555;
-    overflow: hidden;
-  }
+  #preview { width: 400px; height: 400px; background: #000; position: relative; border: 1px solid #555; overflow: hidden; }
 
-  .shape {
-    width: 150px;
-    height: 150px;
-    background: green;
-    position: absolute;
-    top: 125px;
-    left: 125px;
-    border-radius: 0;
-  }
+  .shape { width: 150px; height: 150px; background: green; position: absolute; top: 125px; left: 125px; overflow: hidden; }
+  .shape2 { width: 100px; height: 100px; background: red; border-radius: 50%; position: absolute; top: 50px; left: 50px; overflow: hidden; }
 
-  .shape2 {
-    width: 100px;
-    height: 100px;
-    background: red;
-    border-radius: 50%;
-    position: absolute;
-    top: 50px;
-    left: 50px;
-  }
-
-  .light {
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    position: absolute;
-    top: 100px;
-    left: 100px;
+  .light { width: 200px; height: 200px; border-radius: 50%; position: absolute;
     background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 40%, rgba(255,255,0,0.2) 70%, rgba(255,255,0,0) 100%);
     filter: blur(15px);
-    pointer-events: none;
-    mix-blend-mode: lighten;
   }
 
   .arrows { display: none; gap: 5px; margin-top: 5px; }
@@ -86,10 +43,12 @@
 <body>
 
 <div class="controls">
-  <button class="run-btn">Green Square</button>
-  <button class="shape2-btn">Red Circle</button>
-  <button class="light-btn">Light</button>
-  <button class="move-btn">Move</button>
+  <button class="shape1-btn">Add Green Square</button>
+  <button class="shape2-btn">Add Red Circle</button>
+  <button class="light-btn">Add Light</button>
+  <button class="move-btn">Move Light</button>
+  <button class="run-btn">Run All Layers</button>
+  <button class="save-btn">Save Light</button>
 </div>
 
 <div class="arrows">
@@ -103,42 +62,49 @@
 
 <script>
 const preview = document.getElementById('preview');
-const greenBtn = document.querySelector('.run-btn');
+const greenBtn = document.querySelector('.shape1-btn');
 const redBtn = document.querySelector('.shape2-btn');
 const lightBtn = document.querySelector('.light-btn');
 const moveBtn = document.querySelector('.move-btn');
 const arrows = document.querySelector('.arrows');
+const runBtn = document.querySelector('.run-btn');
+const saveBtn = document.querySelector('.save-btn');
 
+let layers = [];
 let lightDiv = null;
+let lastShape = null;
 
-// Add green square
+// Add shapes
 greenBtn.addEventListener('click', () => {
     const shapeDiv = document.createElement('div');
     shapeDiv.className = 'shape';
     preview.appendChild(shapeDiv);
+    layers.push(shapeDiv);
+    lastShape = shapeDiv;
 });
 
-// Add red circle
 redBtn.addEventListener('click', () => {
     const shapeDiv = document.createElement('div');
     shapeDiv.className = 'shape2';
     preview.appendChild(shapeDiv);
+    layers.push(shapeDiv);
+    lastShape = shapeDiv;
 });
 
-// Light button: adds light above all shapes
+// Add light
 lightBtn.addEventListener('click', () => {
-    if(lightDiv) return;
+    if(!lastShape || lightDiv) return;
     lightDiv = document.createElement('div');
     lightDiv.className = 'light';
-    preview.appendChild(lightDiv);
+    lastShape.appendChild(lightDiv);
 });
 
-// Move button toggles arrows
+// Toggle move arrows
 moveBtn.addEventListener('click', () => {
     arrows.style.display = arrows.style.display === 'flex' ? 'none' : 'flex';
 });
 
-// Arrow buttons: move the light
+// Move light with arrows
 arrows.querySelectorAll('.arrow-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         if(!lightDiv) return;
@@ -149,6 +115,28 @@ arrows.querySelectorAll('.arrow-btn').forEach(btn => {
         lightDiv.style.top = (top + dy) + 'px';
         lightDiv.style.left = (left + dx) + 'px';
     });
+});
+
+// Save light into each shape's code
+saveBtn.addEventListener('click', () => {
+    if(!lightDiv) return;
+    layers.forEach(shape => {
+        const newLight = document.createElement('div');
+        newLight.className = 'light';
+        // Keep relative position inside shape
+        newLight.style.top = lightDiv.style.top;
+        newLight.style.left = lightDiv.style.left;
+        shape.appendChild(newLight);
+    });
+    // Remove interactive light
+    lightDiv.remove();
+    lightDiv = null;
+});
+
+// Run all layers (just ensures current preview shows shapes with their lights)
+runBtn.addEventListener('click', () => {
+    preview.innerHTML = '';
+    layers.forEach(shape => preview.appendChild(shape));
 });
 </script>
 
