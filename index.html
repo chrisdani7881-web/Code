@@ -63,7 +63,9 @@
     <button onclick="moveLight(0, -10)">Up</button><br>
     <button onclick="moveLight(-10, 0)">Left</button>
     <button onclick="moveLight(10, 0)">Right</button><br>
-    <button onclick="moveLight(0, 10)">Down</button>
+    <button onclick="moveLight(0, 10)">Down</button><br>
+    <button onclick="resizeLight(10)">Increase</button>
+    <button onclick="resizeLight(-10)">Decrease</button>
   </div>
 
   <textarea id="shapeCode1">&lt;rect x="50" y="50" width="150" height="150" fill="blue" /&gt;</textarea>
@@ -78,6 +80,7 @@
 
     let masterLight = null;
     let cx = 125, cy = 125;
+    let r = 75;
 
     function addLight() {
       if (masterLight) return;
@@ -85,7 +88,7 @@
       masterLight.setAttribute("id", "masterLight");
       masterLight.setAttribute("cx", cx);
       masterLight.setAttribute("cy", cy);
-      masterLight.setAttribute("r", 75);
+      masterLight.setAttribute("r", r);
       masterLight.setAttribute("fill", "url(#lightGradient)");
       canvas.appendChild(masterLight);
     }
@@ -98,24 +101,26 @@
       masterLight.setAttribute("cy", cy);
     }
 
+    function resizeLight(dr) {
+      if (!masterLight) return;
+      r = Math.max(10, r + dr); // Prevent radius from going below 10
+      masterLight.setAttribute("r", r);
+    }
+
     function maskLight() {
       if (!masterLight) return;
 
-      // Select all shapes dynamically
       const shapes = canvas.querySelectorAll('rect[data-layer]');
       shapes.forEach((shape, index) => {
         const light = masterLight.cloneNode(true);
         light.removeAttribute("id");
 
-        // Each shape has its own clip-path
         light.setAttribute("clip-path", `url(#shapeClip${index+1})`);
         canvas.appendChild(light);
 
-        // Append to corresponding textarea
-        codeAreas[index].value += `\n<circle cx="${cx}" cy="${cy}" r="75" fill="url(#lightGradient)" clip-path="url(#shapeClip${index+1})" />`;
+        codeAreas[index].value += `\n<circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#lightGradient)" clip-path="url(#shapeClip${index+1})" />`;
       });
 
-      // Remove master light
       masterLight.remove();
       masterLight = null;
     }
