@@ -40,8 +40,13 @@
     .clear-all-btn { background: #9c27b0; }
     .clear-all-btn:hover { background: #8e24aa; transform: scale(1.05); box-shadow: 0 0 10px rgba(156,39,176,0.7); }
 
-    .layer-btn { background: #555; }
-    .layer-btn.selected { background: yellow; color: black; }
+    .layer-btn {
+        background: #555;
+    }
+    .layer-btn.selected {
+        background: yellow;
+        color: black;
+    }
     .layer-btn:hover { background: #777; }
 
     .move-btn { background: #2196F3; }
@@ -49,6 +54,9 @@
 
     .save-btn { background: #ff9800; }
     .save-btn:hover { background: #fb8c00; }
+
+    .light-btn { background: #ffd700; }
+    .light-btn:hover { background: #ffc700; }
 
     .arrow-btn {
         background: #333;
@@ -89,7 +97,6 @@
         margin-top: 10px;
         background: #fff;
         border-radius: 8px;
-        position: relative;
     }
 
     .arrow-container { display: none; gap: 5px; margin-top: 5px; }
@@ -103,6 +110,7 @@
     <button class="clear-all-btn" onclick="clearAll()">Clear All</button>
     <button class="move-btn" onclick="toggleMove()">Move</button>
     <button class="save-btn" onclick="saveLayerCode()">Save</button>
+    <button class="light-btn">Light</button>
 </div>
 
 <div class="editor-controls" id="layerButtons">
@@ -160,17 +168,24 @@ function updateLines() {
     lineNumbers.innerText = Array.from({length: lineCount}, (_, i) => i + 1).join("\n");
 }
 
-// ** Run all layers at same time **
 function runCode() {
     const doc = preview.contentDocument || preview.contentWindow.document;
     doc.open();
-    doc.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Preview</title></head><body style="margin:0;position:relative;">');
-    Object.keys(layers).forEach(k=>{
-        if(layers[k]){
-            doc.write(`<div id="layer${k}" style="position:absolute;top:50px;left:50px;">${layers[k]}</div>`);
+    doc.write('');
+    Object.keys(layers).forEach(k => {
+        if(layers[k]) {
+            let layerDiv = doc.getElementById('layer'+k);
+            if(!layerDiv){
+                layerDiv = doc.createElement('div');
+                layerDiv.id = 'layer'+k;
+                doc.body.appendChild(layerDiv);
+                layerDiv.style.position = 'absolute';
+                if(!layerDiv.style.top) layerDiv.style.top = '50px';
+                if(!layerDiv.style.left) layerDiv.style.left = '50px';
+            }
+            layerDiv.innerHTML = layers[k];
         }
     });
-    doc.write('</body></html>');
     doc.close();
 }
 
@@ -178,6 +193,9 @@ function clearLayer() {
     layers[currentLayer] = '';
     codeArea.value = '';
     updateLines();
+    const doc = preview.contentDocument || preview.contentWindow.document;
+    const layerDiv = doc.getElementById('layer'+currentLayer);
+    if(layerDiv) doc.body.removeChild(layerDiv);
 }
 
 function clearAll() {
@@ -185,7 +203,7 @@ function clearAll() {
     codeArea.value = '';
     updateLines();
     const doc = preview.contentDocument || preview.contentWindow.document;
-    doc.open(); doc.write(''); doc.close();
+    doc.body.innerHTML='';
 }
 
 function toggleMove() {
@@ -207,13 +225,16 @@ function saveLayerCode() {
     const doc = preview.contentDocument || preview.contentWindow.document;
     const layerDiv = doc.getElementById('layer'+currentLayer);
     if(layerDiv){
-        layers[currentLayer] = layerDiv.innerHTML;
-        codeArea.value = layers[currentLayer];
+        let code = layers[currentLayer] || '';
+        code = code.replace(/top:\s*\d+px;/,'top:'+layerDiv.style.top+';');
+        code = code.replace(/left:\s*\d+px;/,'left:'+layerDiv.style.left+';');
+        layers[currentLayer] = code;
+        codeArea.value = code;
         updateLines();
     }
 }
 
-selectLayer(1);
+selectLayer(1); // Initialize
 </script>
 
 </body>
