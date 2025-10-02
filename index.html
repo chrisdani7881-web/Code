@@ -21,6 +21,7 @@
     margin-bottom: 10px;
     display: flex;
     gap: 5px;
+    flex-wrap: wrap;
   }
 
   button {
@@ -33,6 +34,8 @@
 
   .run-btn { background: #4caf50; color: #fff; }
   .light-btn { background: #ffeb3b; color: #000; }
+  .move-btn { background: #2196F3; color: #fff; }
+  .arrow-btn { width: 40px; height: 40px; font-size: 20px; background: #333; color: #fff; }
 
   #preview {
     width: 400px;
@@ -49,7 +52,7 @@
     position: absolute;
     top: 125px;
     left: 125px;
-    overflow: hidden; /* important: light only shows inside shape */
+    overflow: hidden;
   }
 
   .light {
@@ -57,11 +60,13 @@
     height: 200px;
     border-radius: 50%;
     position: absolute;
-    top: -25px; /* center over square */
+    top: -25px;
     left: -25px;
     background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 40%, rgba(255,255,0,0.2) 70%, rgba(255,255,0,0) 100%);
     filter: blur(15px);
   }
+
+  .arrows { display: none; gap: 5px; margin-top: 5px; }
 </style>
 </head>
 <body>
@@ -69,6 +74,14 @@
 <div class="controls">
   <button class="run-btn">Run</button>
   <button class="light-btn">Light</button>
+  <button class="move-btn">Move</button>
+</div>
+
+<div class="arrows">
+  <button class="arrow-btn" data-dx="0" data-dy="-10">↑</button>
+  <button class="arrow-btn" data-dx="0" data-dy="10">↓</button>
+  <button class="arrow-btn" data-dx="-10" data-dy="0">←</button>
+  <button class="arrow-btn" data-dx="10" data-dy="0">→</button>
 </div>
 
 <div id="preview"></div>
@@ -77,23 +90,45 @@
 const preview = document.getElementById('preview');
 const runBtn = document.querySelector('.run-btn');
 const lightBtn = document.querySelector('.light-btn');
+const moveBtn = document.querySelector('.move-btn');
+const arrows = document.querySelector('.arrows');
 
 let shapeDiv = null;
+let lightDiv = null;
 
-// Run button: adds the green square
+// Run button: adds green square
 runBtn.addEventListener('click', () => {
-    preview.innerHTML = ''; // clear preview
+    preview.innerHTML = '';
     shapeDiv = document.createElement('div');
     shapeDiv.className = 'shape';
     preview.appendChild(shapeDiv);
+    lightDiv = null; // reset light
 });
 
-// Light button: adds light inside the square
+// Light button: adds light inside square
 lightBtn.addEventListener('click', () => {
-    if(!shapeDiv) return; // only if square exists
-    const lightDiv = document.createElement('div');
+    if(!shapeDiv || lightDiv) return;
+    lightDiv = document.createElement('div');
     lightDiv.className = 'light';
     shapeDiv.appendChild(lightDiv);
+});
+
+// Move button toggles arrows
+moveBtn.addEventListener('click', () => {
+    arrows.style.display = arrows.style.display === 'flex' ? 'none' : 'flex';
+});
+
+// Arrow buttons: move the light
+arrows.querySelectorAll('.arrow-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if(!lightDiv) return;
+        let top = parseInt(lightDiv.style.top || 0);
+        let left = parseInt(lightDiv.style.left || 0);
+        const dx = parseInt(btn.dataset.dx);
+        const dy = parseInt(btn.dataset.dy);
+        lightDiv.style.top = (top + dy) + 'px';
+        lightDiv.style.left = (left + dx) + 'px';
+    });
 });
 </script>
 
