@@ -1,102 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Light Masked on Multiple Shapes</title>
-  <style>
-    body {
-      background: black;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-      color: white;
-      font-family: sans-serif;
-    }
-    svg {
-      border: 1px solid #555;
-      background: black;
-    }
-    .controls {
-      margin-top: 10px;
-    }
-    button {
-      margin: 2px;
-      padding: 5px 10px;
-      background: #222;
-      color: white;
-      border: 1px solid #555;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #444;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Master Light Mask Example</title>
+<style>
+  body {
+    background: black;
+    color: white;
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    height: 100vh;
+  }
+  svg {
+    border: 1px solid #555;
+    background: black;
+  }
+  .controls { margin-top: 10px; }
+  button {
+    margin: 2px;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+</style>
 </head>
 <body>
-  <svg id="canvas" width="500" height="400">
-    <defs>
-      <radialGradient id="lightGradient" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="white" stop-opacity="1" />
-        <stop offset="100%" stop-color="black" stop-opacity="0" />
-      </radialGradient>
 
-      <!-- Clip paths for shapes -->
-      <clipPath id="shape1Clip">
-        <rect x="50" y="100" width="150" height="150" />
-      </clipPath>
-      <clipPath id="shape2Clip">
-        <rect x="300" y="100" width="100" height="100" />
-      </clipPath>
-    </defs>
+<svg id="canvas" width="400" height="400">
+  <defs>
+    <radialGradient id="lightGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="white" stop-opacity="1" />
+      <stop offset="100%" stop-color="black" stop-opacity="0" />
+    </radialGradient>
+  </defs>
 
-    <!-- Shapes -->
-    <rect id="shape1" x="50" y="100" width="150" height="150" fill="blue" />
-    <rect id="shape2" x="300" y="100" width="100" height="100" fill="red" />
+  <!-- Shape 1 -->
+  <rect id="shape1" x="50" y="50" width="100" height="100" fill="green"/>
+  <!-- Shape 2 -->
+  <rect id="shape2" x="250" y="50" width="100" height="100" fill="red"/>
+</svg>
 
-    <!-- Master light -->
-    <circle id="masterLight" cx="150" cy="175" r="80" fill="url(#lightGradient)" />
-  </svg>
+<div class="controls">
+  <button id="addLightBtn">Add Light</button>
+  <button onclick="moveLight(0,-10)">Up</button>
+  <button onclick="moveLight(0,10)">Down</button>
+  <button onclick="moveLight(-10,0)">Left</button>
+  <button onclick="moveLight(10,0)">Right</button>
+  <button id="maskBtn">Mask Light</button>
+</div>
 
-  <div class="controls">
-    <button onclick="moveLight(0, -10)">Up</button>
-    <button onclick="moveLight(-10, 0)">Left</button>
-    <button onclick="moveLight(10, 0)">Right</button>
-    <button onclick="moveLight(0, 10)">Down</button>
-    <button onclick="applyMask()">Mask</button>
-  </div>
+<script>
+const svg = document.getElementById("canvas");
+const shapes = [document.getElementById("shape1"), document.getElementById("shape2")];
+let masterLight = null;
+let cx = 100, cy = 100;
 
-  <script>
-    const masterLight = document.getElementById("masterLight");
-    const canvas = document.getElementById("canvas");
-    let cx = 150, cy = 175;
+// Add master light
+document.getElementById("addLightBtn").addEventListener("click", () => {
+  if(masterLight) return;
+  masterLight = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  masterLight.setAttribute("cx", cx);
+  masterLight.setAttribute("cy", cy);
+  masterLight.setAttribute("r", 50);
+  masterLight.setAttribute("fill", "url(#lightGradient)");
+  svg.appendChild(masterLight);
+});
 
-    function moveLight(dx, dy) {
-      cx += dx;
-      cy += dy;
-      masterLight.setAttribute("cx", cx);
-      masterLight.setAttribute("cy", cy);
-    }
+// Move master light
+function moveLight(dx, dy) {
+  if(!masterLight) return;
+  cx += dx;
+  cy += dy;
+  masterLight.setAttribute("cx", cx);
+  masterLight.setAttribute("cy", cy);
+}
 
-    function applyMask() {
-      // Remove previous masked lights
-      document.querySelectorAll('.maskedLight').forEach(el => el.remove());
+// Mask: generate a separate light for each shape
+document.getElementById("maskBtn").addEventListener("click", () => {
+  if(!masterLight) return;
+  shapes.forEach(shape => {
+    const mask = document.createElementNS("http://www.w3.org/2000/svg","mask");
+    const maskId = "mask_" + shape.id;
+    mask.setAttribute("id", maskId);
+    
+    const whiteRect = document.createElementNS("http://www.w3.org/2000/svg","rect");
+    whiteRect.setAttribute("x","0");
+    whiteRect.setAttribute("y","0");
+    whiteRect.setAttribute("width","400");
+    whiteRect.setAttribute("height","400");
+    whiteRect.setAttribute("fill","black");
+    
+    const lightCircle = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    lightCircle.setAttribute("cx", cx);
+    lightCircle.setAttribute("cy", cy);
+    lightCircle.setAttribute("r", 50);
+    lightCircle.setAttribute("fill","white");
+    
+    mask.appendChild(whiteRect);
+    mask.appendChild(lightCircle);
+    svg.querySelector("defs").appendChild(mask);
+    
+    const lightOverlay = document.createElementNS("http://www.w3.org/2000/svg","rect");
+    lightOverlay.setAttribute("x", shape.getAttribute("x"));
+    lightOverlay.setAttribute("y", shape.getAttribute("y"));
+    lightOverlay.setAttribute("width", shape.getAttribute("width"));
+    lightOverlay.setAttribute("height", shape.getAttribute("height"));
+    lightOverlay.setAttribute("fill", "url(#lightGradient)");
+    lightOverlay.setAttribute("mask", `url(#${maskId})`);
+    svg.appendChild(lightOverlay);
+  });
 
-      // List of shapes and corresponding clip paths
-      const shapes = [
-        { clip: 'shape1Clip' },
-        { clip: 'shape2Clip' }
-      ];
+  // Remove master light after masking
+  masterLight.remove();
+  masterLight = null;
+});
+</script>
 
-      shapes.forEach(s => {
-        const newLight = masterLight.cloneNode(true);
-        newLight.classList.add('maskedLight');
-        newLight.setAttribute('clip-path', `url(#${s.clip})`);
-        canvas.appendChild(newLight);
-      });
-    }
-  </script>
 </body>
 </html>
