@@ -3,90 +3,49 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Light Mask Demo</title>
+<title>Layer-Specific Light Mask</title>
 <style>
-body {
-  margin: 0;
-  background: #000;
-  font-family: monospace;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-}
+  body {
+    margin: 0;
+    font-family: monospace;
+    background: #000;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
 
-.controls {
-  display: flex;
-  gap: 5px;
-  margin-bottom: 10px;
-  flex-wrap: wrap;
-}
+  .controls { margin-bottom: 10px; display: flex; gap: 5px; flex-wrap: wrap; }
+  button { padding: 8px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
 
-button {
-  padding: 8px 14px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  color: #fff;
-}
+  .shape1-btn { background: #4caf50; color: #fff; }
+  .shape2-btn { background: #f44336; color: #fff; }
+  .light-btn { background: #ffeb3b; color: #000; }
+  .move-btn { background: #2196F3; color: #fff; }
+  .mask-btn { background: #9c27b0; color: #fff; }
 
-.run-btn { background: #4caf50; }
-shape1-btn { background: #2196F3; }
-.shape2-btn { background: #f44336; }
-.light-btn { background: #ffeb3b; color: #000; }
-.move-btn { background: #9c27b0; }
-.mask-btn { background: #9e9e9e; color: black; }
-.arrow-btn { width: 40px; height: 40px; font-size: 20px; background: #333; }
+  .arrow-btn { width: 40px; height: 40px; font-size: 20px; background: #333; color: #fff; }
 
-#preview {
-  width: 400px;
-  height: 400px;
-  position: relative;
-  border: 1px solid #555;
-  overflow: hidden;
-  background: #000;
-}
+  #preview { width: 400px; height: 400px; background: #000; position: relative; border: 1px solid #555; overflow: hidden; }
 
-.shape {
-  width: 150px;
-  height: 150px;
-  background: green;
-  position: absolute;
-  top: 125px;
-  left: 125px;
-  overflow: hidden;
-}
+  .shape { width: 150px; height: 150px; background: green; position: absolute; top: 125px; left: 125px; overflow: hidden; }
+  .shape2 { width: 100px; height: 100px; background: red; border-radius: 50%; position: absolute; top: 50px; left: 50px; overflow: hidden; }
 
-.shape2 {
-  width: 100px;
-  height: 100px;
-  background: red;
-  border-radius: 50%;
-  position: absolute;
-  top: 50px;
-  left: 50px;
-  overflow: hidden;
-}
+  .light {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 40%, rgba(255,255,0,0.2) 70%, rgba(255,255,0,0) 100%);
+    filter: blur(15px);
+    pointer-events: none;
+  }
 
-.light {
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 40%, rgba(255,255,0,0.2) 70%, rgba(255,255,0,0) 100%);
-  filter: blur(15px);
-  pointer-events: none;
-}
-
-.arrows {
-  display: none;
-  gap: 5px;
-  margin-top: 5px;
-}
+  .arrows { display: none; gap: 5px; margin-top: 5px; }
 </style>
 </head>
 <body>
@@ -96,7 +55,7 @@ shape1-btn { background: #2196F3; }
   <button class="shape2-btn">Add Red Circle</button>
   <button class="light-btn">Add Light</button>
   <button class="move-btn">Move Light</button>
-  <button class="mask-btn">Mask Selected Shape</button>
+  <button class="mask-btn">Mask Selected</button>
 </div>
 
 <div class="arrows">
@@ -118,66 +77,67 @@ const maskBtn = document.querySelector('.mask-btn');
 const arrows = document.querySelector('.arrows');
 
 let layers = [];
-let lastShape = null;
 let lightDiv = null;
 let selectedShape = null;
 
 // Add shapes
 greenBtn.addEventListener('click', () => {
-  const shape = document.createElement('div');
-  shape.className = 'shape';
-  preview.appendChild(shape);
-  layers.push(shape);
-  lastShape = shape;
-  selectedShape = shape;
+    const shape = document.createElement('div');
+    shape.className = 'shape';
+    preview.appendChild(shape);
+    layers.push(shape);
+    selectedShape = shape;
 });
 
 redBtn.addEventListener('click', () => {
-  const shape = document.createElement('div');
-  shape.className = 'shape2';
-  preview.appendChild(shape);
-  layers.push(shape);
-  lastShape = shape;
-  selectedShape = shape;
+    const shape = document.createElement('div');
+    shape.className = 'shape2';
+    preview.appendChild(shape);
+    layers.push(shape);
+    selectedShape = shape;
 });
 
 // Add global light
 lightBtn.addEventListener('click', () => {
-  if(lightDiv) return;
-  lightDiv = document.createElement('div');
-  lightDiv.className = 'light';
-  lightDiv.style.top = '0px';
-  lightDiv.style.left = '0px';
-  preview.appendChild(lightDiv);
+    if(lightDiv) return;
+    lightDiv = document.createElement('div');
+    lightDiv.className = 'light';
+    preview.appendChild(lightDiv);
 });
 
 // Toggle move arrows
 moveBtn.addEventListener('click', () => {
-  arrows.style.display = arrows.style.display === 'flex' ? 'none' : 'flex';
+    arrows.style.display = arrows.style.display === 'flex' ? 'none' : 'flex';
 });
 
 // Move light
 arrows.querySelectorAll('.arrow-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    if(!lightDiv) return;
-    let top = parseInt(lightDiv.style.top || 0);
-    let left = parseInt(lightDiv.style.left || 0);
-    const dx = parseInt(btn.dataset.dx);
-    const dy = parseInt(btn.dataset.dy);
-    lightDiv.style.top = (top + dy) + 'px';
-    lightDiv.style.left = (left + dx) + 'px';
-  });
+    btn.addEventListener('click', () => {
+        if(!lightDiv) return;
+        const dx = parseInt(btn.dataset.dx);
+        const dy = parseInt(btn.dataset.dy);
+        const top = parseInt(lightDiv.style.top || 0);
+        const left = parseInt(lightDiv.style.left || 0);
+        lightDiv.style.top = (top + dy) + 'px';
+        lightDiv.style.left = (left + dx) + 'px';
+    });
+});
+
+// Select a shape by clicking
+preview.addEventListener('click', e => {
+    if(e.target.classList.contains('shape') || e.target.classList.contains('shape2')) {
+        selectedShape = e.target;
+    }
 });
 
 // Mask light to selected shape
 maskBtn.addEventListener('click', () => {
-  if(!selectedShape || !lightDiv) return;
-  // Clone the light and mask it to the selected shape
-  const maskLight = lightDiv.cloneNode(true);
-  maskLight.style.top = (parseInt(maskLight.style.top) - selectedShape.offsetTop) + 'px';
-  maskLight.style.left = (parseInt(maskLight.style.left) - selectedShape.offsetLeft) + 'px';
-  maskLight.style.position = 'absolute';
-  selectedShape.appendChild(maskLight);
+    if(!lightDiv || !selectedShape) return;
+    const lightClone = lightDiv.cloneNode(true);
+    // Constrain light inside shape
+    lightClone.style.top = (parseInt(lightDiv.style.top) - selectedShape.offsetTop) + 'px';
+    lightClone.style.left = (parseInt(lightDiv.style.left) - selectedShape.offsetLeft) + 'px';
+    selectedShape.appendChild(lightClone);
 });
 </script>
 
