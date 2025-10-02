@@ -1,123 +1,125 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Master Light Mask Example</title>
-<style>
-  body {
-    background: black;
-    color: white;
-    font-family: sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin: 0;
-    height: 100vh;
-  }
-  svg {
-    border: 1px solid #555;
-    background: black;
-  }
-  .controls { margin-top: 10px; }
-  button {
-    margin: 2px;
-    padding: 5px 10px;
-    cursor: pointer;
-  }
-</style>
+  <meta charset="UTF-8">
+  <title>Master Light with Mask</title>
+  <style>
+    body {
+      background: black;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      color: white;
+      font-family: sans-serif;
+    }
+    svg {
+      border: 1px solid #555;
+      background: black;
+    }
+    .controls {
+      margin-top: 10px;
+    }
+    button {
+      margin: 2px;
+      padding: 5px 10px;
+      background: #222;
+      color: white;
+      border: 1px solid #555;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #444;
+    }
+    textarea {
+      margin-top: 10px;
+      width: 400px;
+      height: 100px;
+      background: #111;
+      color: white;
+      border: 1px solid #555;
+      padding: 5px;
+      font-family: monospace;
+    }
+  </style>
 </head>
 <body>
+  <svg id="canvas" width="400" height="400">
+    <defs>
+      <!-- Gradient for light -->
+      <radialGradient id="lightGradient" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="white" stop-opacity="1" />
+        <stop offset="100%" stop-color="black" stop-opacity="0" />
+      </radialGradient>
 
-<svg id="canvas" width="400" height="400">
-  <defs>
-    <radialGradient id="lightGradient" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="white" stop-opacity="1" />
-      <stop offset="100%" stop-color="black" stop-opacity="0" />
-    </radialGradient>
-  </defs>
+      <!-- Clip path for the shape -->
+      <clipPath id="shapeClip">
+        <rect id="shape" x="100" y="100" width="200" height="200" />
+      </clipPath>
+    </defs>
 
-  <!-- Shape 1 -->
-  <rect id="shape1" x="50" y="50" width="100" height="100" fill="green"/>
-  <!-- Shape 2 -->
-  <rect id="shape2" x="250" y="50" width="100" height="100" fill="red"/>
-</svg>
+    <!-- Visible shape -->
+    <rect x="100" y="100" width="200" height="200" fill="blue" />
 
-<div class="controls">
-  <button id="addLightBtn">Add Light</button>
-  <button onclick="moveLight(0,-10)">Up</button>
-  <button onclick="moveLight(0,10)">Down</button>
-  <button onclick="moveLight(-10,0)">Left</button>
-  <button onclick="moveLight(10,0)">Right</button>
-  <button id="maskBtn">Mask Light</button>
-</div>
+    <!-- Master light will be added dynamically -->
+  </svg>
 
-<script>
-const svg = document.getElementById("canvas");
-const shapes = [document.getElementById("shape1"), document.getElementById("shape2")];
-let masterLight = null;
-let cx = 100, cy = 100;
+  <div class="controls">
+    <button onclick="addLight()">Add Light</button>
+    <button onclick="maskLight()">Mask Light</button><br>
+    <button onclick="moveLight(0, -10)">Up</button><br>
+    <button onclick="moveLight(-10, 0)">Left</button>
+    <button onclick="moveLight(10, 0)">Right</button><br>
+    <button onclick="moveLight(0, 10)">Down</button>
+  </div>
 
-// Add master light
-document.getElementById("addLightBtn").addEventListener("click", () => {
-  if(masterLight) return;
-  masterLight = document.createElementNS("http://www.w3.org/2000/svg","circle");
-  masterLight.setAttribute("cx", cx);
-  masterLight.setAttribute("cy", cy);
-  masterLight.setAttribute("r", 50);
-  masterLight.setAttribute("fill", "url(#lightGradient)");
-  svg.appendChild(masterLight);
-});
+  <textarea id="shapeCode" readonly></textarea>
 
-// Move master light
-function moveLight(dx, dy) {
-  if(!masterLight) return;
-  cx += dx;
-  cy += dy;
-  masterLight.setAttribute("cx", cx);
-  masterLight.setAttribute("cy", cy);
-}
+  <script>
+    const canvas = document.getElementById("canvas");
+    const shapeCode = document.getElementById("shapeCode");
+    let masterLight = null;
+    let cx = 200, cy = 200;
 
-// Mask: generate a separate light for each shape
-document.getElementById("maskBtn").addEventListener("click", () => {
-  if(!masterLight) return;
-  shapes.forEach(shape => {
-    const mask = document.createElementNS("http://www.w3.org/2000/svg","mask");
-    const maskId = "mask_" + shape.id;
-    mask.setAttribute("id", maskId);
-    
-    const whiteRect = document.createElementNS("http://www.w3.org/2000/svg","rect");
-    whiteRect.setAttribute("x","0");
-    whiteRect.setAttribute("y","0");
-    whiteRect.setAttribute("width","400");
-    whiteRect.setAttribute("height","400");
-    whiteRect.setAttribute("fill","black");
-    
-    const lightCircle = document.createElementNS("http://www.w3.org/2000/svg","circle");
-    lightCircle.setAttribute("cx", cx);
-    lightCircle.setAttribute("cy", cy);
-    lightCircle.setAttribute("r", 50);
-    lightCircle.setAttribute("fill","white");
-    
-    mask.appendChild(whiteRect);
-    mask.appendChild(lightCircle);
-    svg.querySelector("defs").appendChild(mask);
-    
-    const lightOverlay = document.createElementNS("http://www.w3.org/2000/svg","rect");
-    lightOverlay.setAttribute("x", shape.getAttribute("x"));
-    lightOverlay.setAttribute("y", shape.getAttribute("y"));
-    lightOverlay.setAttribute("width", shape.getAttribute("width"));
-    lightOverlay.setAttribute("height", shape.getAttribute("height"));
-    lightOverlay.setAttribute("fill", "url(#lightGradient)");
-    lightOverlay.setAttribute("mask", `url(#${maskId})`);
-    svg.appendChild(lightOverlay);
-  });
+    function addLight() {
+      if (masterLight) return; // only one master light
+      masterLight = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      masterLight.setAttribute("id", "masterLight");
+      masterLight.setAttribute("cx", cx);
+      masterLight.setAttribute("cy", cy);
+      masterLight.setAttribute("r", 100);
+      masterLight.setAttribute("fill", "url(#lightGradient)");
+      canvas.appendChild(masterLight);
+    }
 
-  // Remove master light after masking
-  masterLight.remove();
-  masterLight = null;
-});
-</script>
+    function moveLight(dx, dy) {
+      if (!masterLight) return;
+      cx += dx;
+      cy += dy;
+      masterLight.setAttribute("cx", cx);
+      masterLight.setAttribute("cy", cy);
+    }
 
+    function maskLight() {
+      if (!masterLight) return;
+
+      // Clone master light
+      const maskedLight = masterLight.cloneNode(true);
+      maskedLight.removeAttribute("id"); // unique
+      maskedLight.setAttribute("clip-path", "url(#shapeClip)");
+
+      // Add to canvas above shape
+      canvas.appendChild(maskedLight);
+
+      // Update textarea with current masked light code
+      shapeCode.value = canvas.innerHTML;
+
+      // Remove the interactive master light
+      masterLight.remove();
+      masterLight = null;
+    }
+  </script>
 </body>
 </html>
