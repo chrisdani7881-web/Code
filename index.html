@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shapes with Light</title>
+<title>Shapes with Shared Light</title>
 <style>
   body {
     margin: 0;
@@ -16,27 +16,21 @@
     justify-content: center;
     height: 100vh;
   }
-
   .controls { margin-bottom: 10px; display: flex; gap: 5px; flex-wrap: wrap; }
   button { padding: 8px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-
-  .run-btn { background: #4caf50; color: #fff; }
-  .shape1-btn { background: #2196F3; color: #fff; }
+  .shape1-btn { background: #4caf50; color: #fff; }
   .shape2-btn { background: #f44336; color: #fff; }
   .light-btn { background: #ffeb3b; color: #000; }
-  .move-btn { background: #9c27b0; color: #fff; }
+  .move-btn { background: #2196F3; color: #fff; }
   .arrow-btn { width: 40px; height: 40px; font-size: 20px; background: #333; color: #fff; }
-
   #preview { width: 400px; height: 400px; background: #000; position: relative; border: 1px solid #555; overflow: hidden; }
-
   .shape { width: 150px; height: 150px; background: green; position: absolute; top: 125px; left: 125px; overflow: hidden; }
   .shape2 { width: 100px; height: 100px; background: red; border-radius: 50%; position: absolute; top: 50px; left: 50px; overflow: hidden; }
-
   .light { width: 200px; height: 200px; border-radius: 50%; position: absolute;
     background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 40%, rgba(255,255,0,0.2) 70%, rgba(255,255,0,0) 100%);
     filter: blur(15px);
+    pointer-events: none; /* allow clicks to pass through */
   }
-
   .arrows { display: none; gap: 5px; margin-top: 5px; }
 </style>
 </head>
@@ -47,7 +41,6 @@
   <button class="shape2-btn">Add Red Circle</button>
   <button class="light-btn">Add Light</button>
   <button class="move-btn">Move Light</button>
-  <button class="run-btn">Run All Layers</button>
   <button class="save-btn">Save Light</button>
 </div>
 
@@ -67,76 +60,72 @@ const redBtn = document.querySelector('.shape2-btn');
 const lightBtn = document.querySelector('.light-btn');
 const moveBtn = document.querySelector('.move-btn');
 const arrows = document.querySelector('.arrows');
-const runBtn = document.querySelector('.run-btn');
 const saveBtn = document.querySelector('.save-btn');
 
 let layers = [];
 let lightDiv = null;
-let lastShape = null;
 
 // Add shapes
 greenBtn.addEventListener('click', () => {
-    const shapeDiv = document.createElement('div');
-    shapeDiv.className = 'shape';
-    preview.appendChild(shapeDiv);
-    layers.push(shapeDiv);
-    lastShape = shapeDiv;
+  const shapeDiv = document.createElement('div');
+  shapeDiv.className = 'shape';
+  preview.appendChild(shapeDiv);
+  layers.push(shapeDiv);
 });
 
 redBtn.addEventListener('click', () => {
-    const shapeDiv = document.createElement('div');
-    shapeDiv.className = 'shape2';
-    preview.appendChild(shapeDiv);
-    layers.push(shapeDiv);
-    lastShape = shapeDiv;
+  const shapeDiv = document.createElement('div');
+  shapeDiv.className = 'shape2';
+  preview.appendChild(shapeDiv);
+  layers.push(shapeDiv);
 });
 
-// Add light
+// Add shared light (on top of preview, but visually inside shapes)
 lightBtn.addEventListener('click', () => {
-    if(!lastShape || lightDiv) return;
-    lightDiv = document.createElement('div');
-    lightDiv.className = 'light';
-    lastShape.appendChild(lightDiv);
+  if(lightDiv) return;
+  lightDiv = document.createElement('div');
+  lightDiv.className = 'light';
+  lightDiv.style.top = '100px';
+  lightDiv.style.left = '100px';
+  preview.appendChild(lightDiv);
 });
 
 // Toggle move arrows
 moveBtn.addEventListener('click', () => {
-    arrows.style.display = arrows.style.display === 'flex' ? 'none' : 'flex';
+  arrows.style.display = arrows.style.display === 'flex' ? 'none' : 'flex';
 });
 
 // Move light with arrows
 arrows.querySelectorAll('.arrow-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        if(!lightDiv) return;
-        let top = parseInt(lightDiv.style.top || 0);
-        let left = parseInt(lightDiv.style.left || 0);
-        const dx = parseInt(btn.dataset.dx);
-        const dy = parseInt(btn.dataset.dy);
-        lightDiv.style.top = (top + dy) + 'px';
-        lightDiv.style.left = (left + dx) + 'px';
-    });
-});
-
-// Save light into each shape's code
-saveBtn.addEventListener('click', () => {
+  btn.addEventListener('click', () => {
     if(!lightDiv) return;
-    layers.forEach(shape => {
-        const newLight = document.createElement('div');
-        newLight.className = 'light';
-        // Keep relative position inside shape
-        newLight.style.top = lightDiv.style.top;
-        newLight.style.left = lightDiv.style.left;
-        shape.appendChild(newLight);
-    });
-    // Remove interactive light
-    lightDiv.remove();
-    lightDiv = null;
+    const dx = parseInt(btn.dataset.dx);
+    const dy = parseInt(btn.dataset.dy);
+    let top = parseInt(lightDiv.style.top || 0);
+    let left = parseInt(lightDiv.style.left || 0);
+    lightDiv.style.top = (top + dy) + 'px';
+    lightDiv.style.left = (left + dx) + 'px';
+  });
 });
 
-// Run all layers (just ensures current preview shows shapes with their lights)
-runBtn.addEventListener('click', () => {
-    preview.innerHTML = '';
-    layers.forEach(shape => preview.appendChild(shape));
+// Save light into each shape
+saveBtn.addEventListener('click', () => {
+  if(!lightDiv) return;
+  layers.forEach(shape => {
+    const savedLight = document.createElement('div');
+    savedLight.className = 'light';
+    // compute light relative to shape
+    const rect = shape.getBoundingClientRect();
+    const previewRect = preview.getBoundingClientRect();
+    const offsetTop = parseInt(lightDiv.style.top) - (rect.top - previewRect.top);
+    const offsetLeft = parseInt(lightDiv.style.left) - (rect.left - previewRect.left);
+    savedLight.style.top = offsetTop + 'px';
+    savedLight.style.left = offsetLeft + 'px';
+    shape.appendChild(savedLight);
+  });
+  // remove interactive light
+  lightDiv.remove();
+  lightDiv = null;
 });
 </script>
 
