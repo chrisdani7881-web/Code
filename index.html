@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Single Shape Light Demo</title>
+<title>Shape with Movable Light</title>
 <style>
   body {
     margin: 0;
@@ -16,12 +16,15 @@
     justify-content: center;
     height: 100vh;
   }
-  .controls { margin-bottom: 10px; display: flex; gap: 5px; }
+
+  .controls { margin-bottom: 10px; display: flex; gap: 5px; flex-wrap: wrap; }
   button { padding: 8px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
 
   .shape-btn { background: #4caf50; color: #fff; }
   .light-btn { background: #ffeb3b; color: #000; }
-  .mask-btn { background: #f44336; color: #fff; }
+  .move-btn { background: #2196f3; color: #fff; }
+  .mask-btn { background: #9c27b0; color: #fff; }
+  .arrow-btn { width: 40px; height: 40px; font-size: 20px; background: #333; color: #fff; }
 
   #preview { width: 400px; height: 400px; background: #000; position: relative; border: 1px solid #555; overflow: hidden; }
 
@@ -32,7 +35,7 @@
     position: absolute;
     top: 125px;
     left: 125px;
-    overflow: hidden;
+    overflow: hidden; /* clips light */
   }
 
   .light {
@@ -40,11 +43,13 @@
     height: 200px;
     border-radius: 50%;
     position: absolute;
-    top: -25px;
-    left: -25px;
     background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 40%, rgba(255,255,0,0.2) 70%, rgba(255,255,0,0) 100%);
     filter: blur(15px);
+    top: -25px;
+    left: -25px;
   }
+
+  .arrows { display: none; gap: 5px; margin-top: 5px; }
 </style>
 </head>
 <body>
@@ -52,7 +57,15 @@
 <div class="controls">
   <button class="shape-btn">Add Shape</button>
   <button class="light-btn">Add Light</button>
+  <button class="move-btn">Move Light</button>
   <button class="mask-btn">Mask Light</button>
+</div>
+
+<div class="arrows">
+  <button class="arrow-btn" data-dx="0" data-dy="-10">↑</button>
+  <button class="arrow-btn" data-dx="0" data-dy="10">↓</button>
+  <button class="arrow-btn" data-dx="-10" data-dy="0">←</button>
+  <button class="arrow-btn" data-dx="10" data-dy="0">→</button>
 </div>
 
 <div id="preview"></div>
@@ -61,40 +74,54 @@
 const preview = document.getElementById('preview');
 const shapeBtn = document.querySelector('.shape-btn');
 const lightBtn = document.querySelector('.light-btn');
+const moveBtn = document.querySelector('.move-btn');
 const maskBtn = document.querySelector('.mask-btn');
+const arrows = document.querySelector('.arrows');
 
-let shapeDiv = null;
-let lightDiv = null;
+let shape = null;
+let masterLight = null;
 
-// Add one shape
+// Add shape
 shapeBtn.addEventListener('click', () => {
-    if(shapeDiv) return;
-    shapeDiv = document.createElement('div');
-    shapeDiv.className = 'shape';
-    preview.appendChild(shapeDiv);
+  shape = document.createElement('div');
+  shape.className = 'shape';
+  preview.appendChild(shape);
 });
 
-// Add master light on top of shape
+// Add master light (on top, free)
 lightBtn.addEventListener('click', () => {
-    if(!shapeDiv || lightDiv) return;
-    lightDiv = document.createElement('div');
-    lightDiv.className = 'light';
-    preview.appendChild(lightDiv);
+  if (masterLight) return;
+  masterLight = document.createElement('div');
+  masterLight.className = 'light';
+  preview.appendChild(masterLight);
 });
 
-// Mask light to shape
+// Toggle move arrows
+moveBtn.addEventListener('click', () => {
+  arrows.style.display = arrows.style.display === 'flex' ? 'none' : 'flex';
+});
+
+// Move light with arrows
+arrows.querySelectorAll('.arrow-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!masterLight) return;
+    let top = parseInt(masterLight.style.top || 0);
+    let left = parseInt(masterLight.style.left || 0);
+    const dx = parseInt(btn.dataset.dx);
+    const dy = parseInt(btn.dataset.dy);
+    masterLight.style.top = (top + dy) + 'px';
+    masterLight.style.left = (left + dx) + 'px';
+  });
+});
+
+// Mask light into shape (clone inside)
 maskBtn.addEventListener('click', () => {
-    if(!shapeDiv || !lightDiv) return;
-    // Clone the light inside the shape with masking
-    const maskedLight = lightDiv.cloneNode();
-    maskedLight.style.position = 'absolute';
-    maskedLight.style.top = lightDiv.offsetTop - shapeDiv.offsetTop + 'px';
-    maskedLight.style.left = lightDiv.offsetLeft - shapeDiv.offsetLeft + 'px';
-    maskedLight.style.clipPath = 'inset(0% 0% 0% 0%)'; // fully inside shape
-    shapeDiv.appendChild(maskedLight);
-    // Remove master light
-    lightDiv.remove();
-    lightDiv = null;
+  if (!shape || !masterLight) return;
+  const newLight = document.createElement('div');
+  newLight.className = 'light';
+  newLight.style.top = masterLight.style.top;
+  newLight.style.left = masterLight.style.left;
+  shape.appendChild(newLight);
 });
 </script>
 
