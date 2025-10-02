@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Light Clipped Inside Shape</title>
+  <title>Master Light Reference</title>
   <style>
     body {
       background: black;
@@ -53,11 +53,11 @@
     <!-- Shape visible -->
     <rect x="100" y="100" width="200" height="200" fill="blue" />
 
-    <!-- Light clipped inside shape -->
-    <circle id="light" cx="200" cy="200" r="100" fill="url(#lightGradient)" clip-path="url(#shapeClip)" />
+    <!-- Light will be added dynamically -->
   </svg>
 
   <div class="controls">
+    <button onclick="addLight()">Add Light</button><br>
     <button onclick="moveLight(0, -10)">Up</button><br>
     <button onclick="moveLight(-10, 0)">Left</button>
     <button onclick="moveLight(10, 0)">Right</button><br>
@@ -65,10 +65,24 @@
   </div>
 
   <script>
-    const light = document.getElementById("light");
+    const canvas = document.getElementById("canvas");
+    let light = null;
     let cx = 200, cy = 200;
 
+    function addLight() {
+      if (light) return; // only one master light
+      light = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      light.setAttribute("id", "masterLight");
+      light.setAttribute("cx", cx);
+      light.setAttribute("cy", cy);
+      light.setAttribute("r", 100);
+      light.setAttribute("fill", "url(#lightGradient)");
+      // for now not clipped, this is just the reference
+      canvas.appendChild(light);
+    }
+
     function moveLight(dx, dy) {
+      if (!light) return;
       cx += dx;
       cy += dy;
       light.setAttribute("cx", cx);
