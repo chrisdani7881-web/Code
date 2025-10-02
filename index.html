@@ -54,7 +54,7 @@
       </radialGradient>
 
       <!-- Clip paths for shapes -->
-      <clipPath id="shapeClip">
+      <clipPath id="shape1Clip">
         <rect id="shape1" x="50" y="100" width="150" height="150"/>
       </clipPath>
       <clipPath id="shape2Clip">
@@ -112,14 +112,14 @@
     function maskLight() {
       if (!masterLight) return;
 
-      // First shape
+      // Mask into shape 1
       const maskedLight1 = masterLight.cloneNode(true);
       maskedLight1.removeAttribute("id");
-      maskedLight1.setAttribute("clip-path", "url(#shapeClip)");
+      maskedLight1.setAttribute("clip-path", "url(#shape1Clip)");
       canvas.appendChild(maskedLight1);
       document.getElementById("shape1Code").value += "\n" + maskedLight1.outerHTML;
 
-      // Second shape
+      // Mask into shape 2
       const maskedLight2 = masterLight.cloneNode(true);
       maskedLight2.removeAttribute("id");
       maskedLight2.setAttribute("clip-path", "url(#shape2Clip)");
