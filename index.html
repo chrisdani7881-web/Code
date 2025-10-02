@@ -1,198 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Single Shape — Master Light + Move + Mask (Fixed)</title>
-<style>
-  :root { --bg:#000; --accent:#ffeb3b; --shape:#2ecc71; }
-  html,body{height:100%;margin:0;background:var(--bg);color:#fff;font-family:monospace;display:flex;align-items:center;justify-content:center}
-  .ui { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
-  button{padding:8px 12px;border-radius:6px;border:0;cursor:pointer;font-weight:700}
-  .shape-btn{background:#4caf50;color:#fff}
-  .light-btn{background:var(--accent); color:#000}
-  .move-btn{background:#2196f3;color:#fff}
-  .mask-btn{background:#9c27b0;color:#fff}
-
-  .container { display:flex; flex-direction:column; align-items:center; }
-  #preview {
-    width:420px;
-    height:420px;
-    background: #000;
-    border:1px solid #444;
-    position:relative;
-    overflow:hidden;
-  }
-
-  /* the shape (single) */
-  .shape {
-    width:200px;
-    height:200px;
-    background: var(--shape);
-    position:absolute;
-    top:110px;
-    left:110px;
-    overflow:hidden; /* this is what clips the cloned light */
-    border-radius:8px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.6) inset;
-  }
-
-  /* master light (on top of preview) */
-  .master-light, .cloned-light {
-    width:240px;
-    height:240px;
-    border-radius:50%;
-    position:absolute;
-    background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 35%, rgba(255,236,102,0.16) 65%, rgba(255,236,102,0) 100%);
-    filter: blur(16px);
-    pointer-events: auto;
-    transform: translateZ(0);
-  }
-
-  /* arrows */
-  .arrows { display:none; gap:6px; margin-top:8px; }
-  .arrow { width:40px;height:40px;background:#333;border-radius:6px;color:#fff;font-weight:700;border:0; cursor:pointer; }
-  .hint { font-size:12px; opacity:0.6; margin-top:8px; text-align:center;}
-</style>
+  <meta charset="UTF-8">
+  <title>Light Clipped Inside Shape</title>
+  <style>
+    body {
+      background: black;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      color: white;
+      font-family: sans-serif;
+    }
+    svg {
+      border: 1px solid #555;
+      background: black;
+    }
+    .controls {
+      margin-top: 10px;
+    }
+    button {
+      margin: 2px;
+      padding: 5px 10px;
+      background: #222;
+      color: white;
+      border: 1px solid #555;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #444;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <div class="ui">
-      <button class="shape-btn" id="addShape">Add Shape</button>
-      <button class="light-btn" id="addLight">Add Master Light</button>
-      <button class="move-btn" id="toggleMove">Move Light</button>
-      <button class="mask-btn" id="maskLight">Mask Light Into Shape</button>
-    </div>
+  <svg id="canvas" width="400" height="400">
+    <defs>
+      <!-- Gradient for light -->
+      <radialGradient id="lightGradient" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="white" stop-opacity="1" />
+        <stop offset="100%" stop-color="black" stop-opacity="0" />
+      </radialGradient>
 
-    <div id="preview"></div>
+      <!-- Clip path for the shape -->
+      <clipPath id="shapeClip">
+        <rect id="shape" x="100" y="100" width="200" height="200" fill="blue"/>
+      </clipPath>
+    </defs>
 
-    <div class="arrows" id="arrows">
-      <button class="arrow" data-dx="0" data-dy="-8">↑</button>
-      <button class="arrow" data-dx="0" data-dy="8">↓</button>
-      <button class="arrow" data-dx="-8" data-dy="0">←</button>
-      <button class="arrow" data-dx="8" data-dy="0">→</button>
-    </div>
+    <!-- Shape visible -->
+    <rect x="100" y="100" width="200" height="200" fill="blue" />
 
-    <div class="hint">Drag master light OR use Move → arrows. Then click "Mask Light Into Shape".</div>
+    <!-- Light clipped inside shape -->
+    <circle id="light" cx="200" cy="200" r="100" fill="url(#lightGradient)" clip-path="url(#shapeClip)" />
+  </svg>
+
+  <div class="controls">
+    <button onclick="moveLight(0, -10)">Up</button><br>
+    <button onclick="moveLight(-10, 0)">Left</button>
+    <button onclick="moveLight(10, 0)">Right</button><br>
+    <button onclick="moveLight(0, 10)">Down</button>
   </div>
 
-<script>
-const preview = document.getElementById('preview');
-const addShapeBtn = document.getElementById('addShape');
-const addLightBtn = document.getElementById('addLight');
-const toggleMoveBtn = document.getElementById('toggleMove');
-const maskBtn = document.getElementById('maskLight');
-const arrows = document.getElementById('arrows');
+  <script>
+    const light = document.getElementById("light");
+    let cx = 200, cy = 200;
 
-let shape = null;         // the single shape
-let masterLight = null;   // the floating master light
-
-// --- Add one shape (idempotent) ---
-addShapeBtn.addEventListener('click', () => {
-  if (shape) return;
-  shape = document.createElement('div');
-  shape.className = 'shape';
-  preview.appendChild(shape);
-});
-
-// --- Add master light on top of preview ---
-addLightBtn.addEventListener('click', () => {
-  if (masterLight) return;
-  masterLight = document.createElement('div');
-  masterLight.className = 'master-light';
-  // initial center-ish position (relative to preview)
-  masterLight.style.left = '80px';
-  masterLight.style.top  = '80px';
-  preview.appendChild(masterLight);
-
-  makeDraggable(masterLight); // allow drag
-});
-
-// --- toggle arrows (move mode) ---
-toggleMoveBtn.addEventListener('click', () => {
-  arrows.style.display = arrows.style.display === 'flex' ? 'none' : 'flex';
-});
-
-// arrows move the master light by deltas (applies even if inline style not present)
-arrows.addEventListener('click', (e) => {
-  const btn = e.target.closest('button');
-  if(!btn || !masterLight) return;
-  const dx = parseFloat(btn.dataset.dx) || 0;
-  const dy = parseFloat(btn.dataset.dy) || 0;
-  moveMasterBy(dx, dy);
-});
-
-// --- Mask: clone master light into shape and clip by overflow:hidden ---
-maskBtn.addEventListener('click', () => {
-  if(!shape) { alert('Add the shape first'); return; }
-  if(!masterLight) { alert('Add the master light first'); return; }
-
-  // compute master pos relative to preview
-  const masterRect = masterLight.getBoundingClientRect();
-  const previewRect = preview.getBoundingClientRect();
-  // compute master top/left inside preview
-  const masterLeftInPreview = masterRect.left - previewRect.left;
-  const masterTopInPreview  = masterRect.top  - previewRect.top;
-
-  // compute where that location sits inside the shape element
-  const shapeRect = shape.getBoundingClientRect();
-  const offsetLeft = masterRect.left - shapeRect.left;
-  const offsetTop  = masterRect.top  - shapeRect.top;
-
-  // create a clone (cloned-light) and position it inside the shape using offsets
-  const clone = document.createElement('div');
-  clone.className = 'cloned-light master-light'; // reuse same style
-  clone.style.position = 'absolute';
-  clone.style.left = offsetLeft + 'px';
-  clone.style.top  = offsetTop  + 'px';
-
-  /* IMPORTANT: ensure the clone is appended to shape so shape's overflow:hidden clips it.
-     We do NOT remove the master light — masterLight stays so you can mask additional shapes
-     (or mask repeatedly). */
-  shape.appendChild(clone);
-});
-
-// --------------- helpers ---------------
-
-// Move master by dx/dy relative to preview (uses bounding rect to avoid style pitfalls)
-function moveMasterBy(dx, dy) {
-  const preRect = preview.getBoundingClientRect();
-  const mRect = masterLight.getBoundingClientRect();
-  const curLeft = mRect.left - preRect.left;
-  const curTop  = mRect.top  - preRect.top;
-  masterLight.style.left = (curLeft + dx) + 'px';
-  masterLight.style.top  = (curTop  + dy) + 'px';
-}
-
-// Make an element draggable inside preview
-function makeDraggable(el) {
-  el.style.touchAction = 'none';
-  el.addEventListener('pointerdown', onPointerDown);
-
-  function onPointerDown(e) {
-    e.preventDefault();
-    const preRect = preview.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-    const offsetX = e.clientX - elRect.left;
-    const offsetY = e.clientY - elRect.top;
-
-    function onPointerMove(ev) {
-      const left = ev.clientX - preRect.left - offsetX;
-      const top  = ev.clientY - preRect.top  - offsetY;
-      // clamp inside preview if you want; for now allow outside (clipping happens when clone appended)
-      el.style.left = left + 'px';
-      el.style.top  = top  + 'px';
+    function moveLight(dx, dy) {
+      cx += dx;
+      cy += dy;
+      light.setAttribute("cx", cx);
+      light.setAttribute("cy", cy);
     }
-
-    function onPointerUp() {
-      document.removeEventListener('pointermove', onPointerMove);
-      document.removeEventListener('pointerup', onPointerUp);
-    }
-
-    document.addEventListener('pointermove', onPointerMove);
-    document.addEventListener('pointerup', onPointerUp);
-  }
-}
-</script>
+  </script>
 </body>
 </html>
