@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Master Light with Soft Blur</title>
+  <title>Master Light with Brightness Control</title>
   <style>
     body {
       background: black;
@@ -20,8 +20,8 @@
       background: black;
     }
     .controls { margin-top: 10px; text-align: center; }
-    button {
-      margin: 2px;
+    button, input[type=range] {
+      margin: 5px;
       padding: 5px 10px;
       background: #222;
       color: white;
@@ -29,6 +29,9 @@
       cursor: pointer;
     }
     button:hover { background: #444; }
+    input[type=range] {
+      width: 200px;
+    }
     textarea {
       width: 400px;
       height: 60px;
@@ -44,10 +47,10 @@
 <body>
   <svg id="canvas" width="400" height="400">
     <defs>
-      <!-- Smooth gradient -->
+      <!-- Smooth gradient with stop IDs so brightness can be updated -->
       <radialGradient id="lightGradient" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="white" stop-opacity="1" />
-        <stop offset="100%" stop-color="white" stop-opacity="0" />
+        <stop id="lightStop1" offset="0%" stop-color="white" stop-opacity="1" />
+        <stop id="lightStop2" offset="100%" stop-color="white" stop-opacity="0" />
       </radialGradient>
 
       <!-- Blur filter for softness -->
@@ -72,6 +75,10 @@
     <button onclick="moveLight(0, 10)">Down</button><br>
     <button onclick="resizeLight(10)">Increase</button>
     <button onclick="resizeLight(-10)">Decrease</button><br><br>
+
+    <!-- Brightness control -->
+    <label for="brightness">Brightness:</label><br>
+    <input type="range" id="brightness" min="0" max="100" value="100" oninput="adjustBrightness(this.value)">
   </div>
 
   <textarea id="shapeCode1">&lt;rect x="50" y="50" width="150" height="150" fill="blue" /&gt;</textarea>
@@ -115,6 +122,12 @@
       ry = Math.max(10, ry + dr);
       masterLight.setAttribute("rx", rx);
       masterLight.setAttribute("ry", ry);
+    }
+
+    function adjustBrightness(value) {
+      // Map slider 0–100 to opacity 0–1
+      const opacity = value / 100;
+      document.getElementById("lightStop1").setAttribute("stop-opacity", opacity);
     }
 
     function maskLight() {
