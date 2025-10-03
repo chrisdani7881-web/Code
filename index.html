@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Master Light with Brightness Control</title>
+  <title>Master Light with Adjustable Brightness</title>
   <style>
     body {
       background: black;
@@ -47,7 +47,7 @@
 <body>
   <svg id="canvas" width="400" height="400">
     <defs>
-      <!-- Smooth gradient with stop IDs so brightness can be updated -->
+      <!-- Smooth gradient with stop IDs for brightness control -->
       <radialGradient id="lightGradient" cx="50%" cy="50%" r="50%">
         <stop id="lightStop1" offset="0%" stop-color="white" stop-opacity="1" />
         <stop id="lightStop2" offset="100%" stop-color="white" stop-opacity="0" />
@@ -78,7 +78,7 @@
 
     <!-- Brightness control -->
     <label for="brightness">Brightness:</label><br>
-    <input type="range" id="brightness" min="0" max="100" value="100" oninput="adjustBrightness(this.value)">
+    <input type="range" id="brightness" min="0" max="200" value="100" oninput="adjustBrightness(this.value)">
   </div>
 
   <textarea id="shapeCode1">&lt;rect x="50" y="50" width="150" height="150" fill="blue" /&gt;</textarea>
@@ -125,7 +125,7 @@
     }
 
     function adjustBrightness(value) {
-      // Map slider 0–100 to opacity 0–1
+      // Map slider 0–200 to opacity 0–2
       const opacity = value / 100;
       document.getElementById("lightStop1").setAttribute("stop-opacity", opacity);
     }
