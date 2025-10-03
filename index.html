@@ -40,6 +40,9 @@
       padding: 5px;
     }
     .arrow-group { display: flex; flex-wrap: wrap; justify-content: center; width: 120px; margin: 5px auto; }
+    .control-row { display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+    .plusminus { display: flex; flex-direction: column; margin-left: 10px; }
+    .bothone { display: flex; flex-direction: column; margin-left: 10px; }
   </style>
 </head>
 <body>
@@ -53,7 +56,6 @@
       <clipPath id="shapeClip2"><rect id="shape2" x="200" y="200" width="150" height="150" /></clipPath>
     </defs>
 
-    <!-- Visible shapes -->
     <rect x="50" y="50" width="150" height="150" fill="blue" data-layer="1" />
     <rect x="200" y="200" width="150" height="150" fill="red" data-layer="2" />
   </svg>
@@ -69,7 +71,7 @@
     <button onclick="resizeLight(10)">Increase</button>
     <button onclick="resizeLight(-10)">Decrease</button><br><br>
 
-    <div>
+    <div class="control-row">
       <span>Width:</span>
       <div class="arrow-group">
         <button>↖</button>
@@ -79,9 +81,17 @@
         <button>↓</button>
         <button>↘</button>
       </div>
+      <div class="plusminus">
+        <button>+</button>
+        <button>-</button>
+      </div>
+      <div class="bothone">
+        <button>Both Sides</button>
+        <button>One Side</button>
+      </div>
     </div>
 
-    <div>
+    <div class="control-row">
       <span>Height:</span>
       <div class="arrow-group">
         <button>↖</button>
@@ -90,6 +100,14 @@
         <button>↙</button>
         <button>↓</button>
         <button>↘</button>
+      </div>
+      <div class="plusminus">
+        <button>+</button>
+        <button>-</button>
+      </div>
+      <div class="bothone">
+        <button>Both Sides</button>
+        <button>One Side</button>
       </div>
     </div>
   </div>
