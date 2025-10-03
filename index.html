@@ -86,8 +86,8 @@
         <button>↘</button>
       </div>
       <div class="plusminus" id="width-plusminus">
-        <button>+</button>
-        <button>-</button>
+        <button onclick="adjustLightWidth(10)">+</button>
+        <button onclick="adjustLightWidth(-10)">-</button>
       </div>
     </div>
 
@@ -106,8 +106,8 @@
         <button>↘</button>
       </div>
       <div class="plusminus" id="height-plusminus">
-        <button>+</button>
-        <button>-</button>
+        <button onclick="adjustLightHeight(10)">+</button>
+        <button onclick="adjustLightHeight(-10)">-</button>
       </div>
     </div>
   </div>
@@ -178,6 +178,28 @@
         masterLight.setAttribute("ry", ry);
       } else if (lightType === "triangle") {
         triangleSize = Math.max(10, triangleSize + dr);
+        updateTrianglePoints();
+      }
+    }
+
+    function adjustLightWidth(dw) {
+      if (!masterLight) return;
+      if (lightType === "circle") {
+        rx = Math.max(10, rx + dw);
+        masterLight.setAttribute("rx", rx);
+      } else if (lightType === "triangle") {
+        triangleSize = Math.max(10, triangleSize + dw);
+        updateTrianglePoints();
+      }
+    }
+
+    function adjustLightHeight(dh) {
+      if (!masterLight) return;
+      if (lightType === "circle") {
+        ry = Math.max(10, ry + dh);
+        masterLight.setAttribute("ry", ry);
+      } else if (lightType === "triangle") {
+        triangleSize = Math.max(10, triangleSize + dh);
         updateTrianglePoints();
       }
     }
