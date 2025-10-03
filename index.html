@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Master Light with Adjustable Brightness</title>
+  <title>Master Light with True Brightness Control</title>
   <style>
     body {
       background: black;
@@ -47,10 +47,10 @@
 <body>
   <svg id="canvas" width="400" height="400">
     <defs>
-      <!-- Smooth gradient with stop IDs for brightness control -->
+      <!-- Smooth gradient -->
       <radialGradient id="lightGradient" cx="50%" cy="50%" r="50%">
-        <stop id="lightStop1" offset="0%" stop-color="white" stop-opacity="1" />
-        <stop id="lightStop2" offset="100%" stop-color="white" stop-opacity="0" />
+        <stop offset="0%" stop-color="white" stop-opacity="1" />
+        <stop offset="100%" stop-color="white" stop-opacity="0" />
       </radialGradient>
 
       <!-- Blur filter for softness -->
@@ -105,6 +105,7 @@
       masterLight.setAttribute("ry", ry);
       masterLight.setAttribute("fill", "url(#lightGradient)");
       masterLight.setAttribute("filter", "url(#softBlur)");
+      masterLight.setAttribute("opacity", "1");
       canvas.appendChild(masterLight);
     }
 
@@ -127,7 +128,9 @@
     function adjustBrightness(value) {
       // Map slider 0–200 to opacity 0–2
       const opacity = value / 100;
-      document.getElementById("lightStop1").setAttribute("stop-opacity", opacity);
+      if (masterLight) {
+        masterLight.setAttribute("opacity", opacity);
+      }
     }
 
     function maskLight() {
@@ -138,7 +141,7 @@
         light.removeAttribute("id");
         light.setAttribute("clip-path", `url(#shapeClip${index+1})`);
         canvas.appendChild(light);
-        codeAreas[index].value += `\n<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#lightGradient)" filter="url(#softBlur)" clip-path="url(#shapeClip${index+1})" />`;
+        codeAreas[index].value += `\n<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#lightGradient)" filter="url(#softBlur)" opacity="${masterLight.getAttribute("opacity")}" clip-path="url(#shapeClip${index+1})" />`;
       });
       masterLight.remove();
       masterLight = null;
