@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Master Light with Real Brightness</title>
+  <title>Master Light with White-Level Brightness</title>
   <style>
     body {
       background: black;
@@ -53,13 +53,13 @@
         <stop offset="100%" stop-color="white" stop-opacity="0" />
       </radialGradient>
 
-      <!-- Brightness filter (with blur inside) -->
+      <!-- Brightness filter: white scaling + blur -->
       <filter id="brightFilter" x="-50%" y="-50%" width="200%" height="200%">
-        <feComponentTransfer>
-          <feFuncR id="funcR" type="linear" slope="1" />
-          <feFuncG id="funcG" type="linear" slope="1" />
-          <feFuncB id="funcB" type="linear" slope="1" />
-        </feComponentTransfer>
+        <feColorMatrix id="brightnessMatrix" type="matrix" 
+          values="1 0 0 0 0
+                  0 1 0 0 0
+                  0 0 1 0 0
+                  0 0 0 1 0" />
         <feGaussianBlur stdDeviation="25" />
       </filter>
 
@@ -83,7 +83,7 @@
 
     <!-- Brightness control -->
     <label for="brightness">Brightness:</label><br>
-    <input type="range" id="brightness" min="0" max="200" value="100" oninput="adjustBrightness(this.value)">
+    <input type="range" id="brightness" min="50" max="300" value="100" oninput="adjustBrightness(this.value)">
   </div>
 
   <textarea id="shapeCode1">&lt;rect x="50" y="50" width="150" height="150" fill="blue" /&gt;</textarea>
@@ -130,10 +130,12 @@
     }
 
     function adjustBrightness(value) {
-      const slope = value / 100; // 1 = normal, <1 dim, >1 brighter
-      document.getElementById("funcR").setAttribute("slope", slope);
-      document.getElementById("funcG").setAttribute("slope", slope);
-      document.getElementById("funcB").setAttribute("slope", slope);
+      const scale = value / 100; // 1 = normal, >1 brighter, <1 dimmer
+      document.getElementById("brightnessMatrix").setAttribute("values", 
+        `${scale} 0 0 0 0
+         0 ${scale} 0 0 0
+         0 0 ${scale} 0 0
+         0 0 0 1 0`);
     }
 
     function maskLight() {
