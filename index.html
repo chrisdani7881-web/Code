@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Master Light with Mask</title>
+  <title>Master Light with Mask (Soft Edges)</title>
   <style>
     body {
       background: black;
@@ -39,21 +39,18 @@
       font-family: monospace;
       padding: 5px;
     }
-    .arrow-group { display: none; flex-wrap: wrap; justify-content: center; width: 120px; margin: 5px auto; }
-    .control-row { display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
-    .plusminus { display: flex; flex-direction: column; margin-left: 10px; }
-    .bothone { display: flex; flex-direction: column; margin-left: 10px; }
-    input[type="range"] { width: 200px; }
-    .color-buttons { margin: 5px 0; }
   </style>
 </head>
 <body>
   <svg id="canvas" width="400" height="400">
     <defs>
+      <!-- Softer gradient with multiple stops -->
       <radialGradient id="lightGradient" cx="50%" cy="50%" r="50%">
-        <stop id="lightColorStop" offset="0%" stop-color="white" stop-opacity="1" />
+        <stop offset="0%" stop-color="white" stop-opacity="1" />
+        <stop offset="50%" stop-color="white" stop-opacity="0.4" />
         <stop offset="100%" stop-color="black" stop-opacity="0" />
       </radialGradient>
+
       <clipPath id="shapeClip1"><rect id="shape1" x="50" y="50" width="150" height="150" /></clipPath>
       <clipPath id="shapeClip2"><rect id="shape2" x="200" y="200" width="150" height="150" /></clipPath>
     </defs>
@@ -72,60 +69,6 @@
     <button onclick="moveLight(0, 10)">Down</button><br>
     <button onclick="resizeLight(10)">Increase</button>
     <button onclick="resizeLight(-10)">Decrease</button><br><br>
-
-    <div class="control-row">
-      <span>Width:</span>
-      <div class="bothone">
-        <button onclick="selectWidthBoth()">Both Sides</button>
-        <button onclick="selectWidthOne()">One Side</button>
-      </div>
-      <div class="arrow-group" id="width-arrows">
-        <button>↖</button>
-        <button>↑</button>
-        <button>↗</button>
-        <button>↙</button>
-        <button>↓</button>
-        <button>↘</button>
-      </div>
-      <div class="plusminus" id="width-plusminus">
-        <button onclick="adjustLightWidth(10)">+</button>
-        <button onclick="adjustLightWidth(-10)">-</button>
-      </div>
-    </div>
-
-    <div class="control-row">
-      <span>Height:</span>
-      <div class="bothone">
-        <button onclick="selectHeightBoth()">Both Sides</button>
-        <button onclick="selectHeightOne()">One Side</button>
-      </div>
-      <div class="arrow-group" id="height-arrows">
-        <button>↖</button>
-        <button>↑</button>
-        <button>↗</button>
-        <button>↙</button>
-        <button>↓</button>
-        <button>↘</button>
-      </div>
-      <div class="plusminus" id="height-plusminus">
-        <button onclick="adjustLightHeight(10)">+</button>
-        <button onclick="adjustLightHeight(-10)">-</button>
-      </div>
-    </div>
-
-    <div class="color-buttons">
-      <button onclick="setBaseColor('red')">Red</button>
-      <button onclick="setBaseColor('orange')">Orange</button>
-      <button onclick="setBaseColor('yellow')">Yellow</button>
-      <button onclick="setBaseColor('green')">Green</button>
-      <button onclick="setBaseColor('blue')">Blue</button>
-      <button onclick="setBaseColor('purple')">Purple</button>
-    </div>
-
-    <div class="control-row">
-      <span>Shade:</span>
-      <input type="range" id="shadeSlider" min="0" max="100" value="50" oninput="updateShade(this.value)">
-    </div>
   </div>
 
   <textarea id="shapeCode1">&lt;rect x="50" y="50" width="150" height="150" fill="blue" /&gt;</textarea>
@@ -143,28 +86,6 @@
     let cx = 125, cy = 125;
     let rx = 75, ry = 75;
     let triangleSize = 100;
-
-    let baseColor = "white"; // selected base color
-
-    function setBaseColor(color) {
-      baseColor = color;
-      updateShade(document.getElementById("shadeSlider").value);
-    }
-
-    function updateShade(value) {
-      let color;
-      // value 0 → very dark shade, 100 → very light shade
-      switch (baseColor) {
-        case "red": color = `rgb(${Math.floor(50 + 2*value)},0,0)`; break;
-        case "orange": color = `rgb(${Math.floor(50 + 2*value)},${Math.floor(25 + value)},0)`; break;
-        case "yellow": color = `rgb(${Math.floor(100 + 1.5*value)},${Math.floor(100 + 1.5*value)},0)`; break;
-        case "green": color = `rgb(0,${Math.floor(50 + 2*value)},0)`; break;
-        case "blue": color = `rgb(0,0,${Math.floor(50 + 2*value)})`; break;
-        case "purple": color = `rgb(${Math.floor(50 + 2*value)},0,${Math.floor(50 + 2*value)})`; break;
-        default: color = "white";
-      }
-      document.getElementById("lightColorStop").setAttribute("stop-color", color);
-    }
 
     function addCircleLight() {
       if (masterLight) return;
@@ -218,48 +139,6 @@
         triangleSize = Math.max(10, triangleSize + dr);
         updateTrianglePoints();
       }
-    }
-
-    function adjustLightWidth(dw) {
-      if (!masterLight) return;
-      if (lightType === "circle") {
-        rx = Math.max(10, rx + dw);
-        masterLight.setAttribute("rx", rx);
-      } else if (lightType === "triangle") {
-        triangleSize = Math.max(10, triangleSize + dw);
-        updateTrianglePoints();
-      }
-    }
-
-    function adjustLightHeight(dh) {
-      if (!masterLight) return;
-      if (lightType === "circle") {
-        ry = Math.max(10, ry + dh);
-        masterLight.setAttribute("ry", ry);
-      } else if (lightType === "triangle") {
-        triangleSize = Math.max(10, triangleSize + dh);
-        updateTrianglePoints();
-      }
-    }
-
-    function selectWidthBoth() {
-      document.getElementById("width-arrows").style.display = "none";
-      document.getElementById("width-plusminus").style.display = "flex";
-    }
-
-    function selectWidthOne() {
-      document.getElementById("width-arrows").style.display = "flex";
-      document.getElementById("width-plusminus").style.display = "flex";
-    }
-
-    function selectHeightBoth() {
-      document.getElementById("height-arrows").style.display = "none";
-      document.getElementById("height-plusminus").style.display = "flex";
-    }
-
-    function selectHeightOne() {
-      document.getElementById("height-arrows").style.display = "flex";
-      document.getElementById("height-plusminus").style.display = "flex";
     }
 
     function maskLight() {
