@@ -44,6 +44,7 @@
     .plusminus { display: flex; flex-direction: column; margin-left: 10px; }
     .bothone { display: flex; flex-direction: column; margin-left: 10px; }
     input[type="range"] { width: 200px; }
+    .color-buttons { margin: 5px 0; }
   </style>
 </head>
 <body>
@@ -112,9 +113,18 @@
       </div>
     </div>
 
+    <div class="color-buttons">
+      <button onclick="setBaseColor('red')">Red</button>
+      <button onclick="setBaseColor('orange')">Orange</button>
+      <button onclick="setBaseColor('yellow')">Yellow</button>
+      <button onclick="setBaseColor('green')">Green</button>
+      <button onclick="setBaseColor('blue')">Blue</button>
+      <button onclick="setBaseColor('purple')">Purple</button>
+    </div>
+
     <div class="control-row">
-      <span>Color Temp:</span>
-      <input type="range" id="colorTemp" min="1000" max="10000" step="100" value="5500" oninput="updateLightColor(this.value)">
+      <span>Shade:</span>
+      <input type="range" id="shadeSlider" min="0" max="100" value="50" oninput="updateShade(this.value)">
     </div>
   </div>
 
@@ -134,24 +144,25 @@
     let rx = 75, ry = 75;
     let triangleSize = 100;
 
-    function kelvinToRGB(temp) {
-      let r, g, b;
-      temp = temp / 100;
+    let baseColor = "white"; // selected base color
 
-      if (temp <= 66) {
-        r = 255;
-        g = Math.min(255, Math.max(0, 99.47 * Math.log(temp) - 161.12));
-        b = temp <= 19 ? 0 : Math.min(255, Math.max(0, 138.52 * Math.log(temp - 10) - 305.04));
-      } else {
-        r = Math.min(255, Math.max(0, 329.70 * Math.pow(temp - 60, -0.1332)));
-        g = Math.min(255, Math.max(0, 288.12 * Math.pow(temp - 60, -0.0755)));
-        b = 255;
-      }
-      return `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
+    function setBaseColor(color) {
+      baseColor = color;
+      updateShade(document.getElementById("shadeSlider").value);
     }
 
-    function updateLightColor(temp) {
-      const color = kelvinToRGB(temp);
+    function updateShade(value) {
+      let color;
+      // value 0 → very dark shade, 100 → very light shade
+      switch (baseColor) {
+        case "red": color = `rgb(${Math.floor(50 + 2*value)},0,0)`; break;
+        case "orange": color = `rgb(${Math.floor(50 + 2*value)},${Math.floor(25 + value)},0)`; break;
+        case "yellow": color = `rgb(${Math.floor(100 + 1.5*value)},${Math.floor(100 + 1.5*value)},0)`; break;
+        case "green": color = `rgb(0,${Math.floor(50 + 2*value)},0)`; break;
+        case "blue": color = `rgb(0,0,${Math.floor(50 + 2*value)})`; break;
+        case "purple": color = `rgb(${Math.floor(50 + 2*value)},0,${Math.floor(50 + 2*value)})`; break;
+        default: color = "white";
+      }
       document.getElementById("lightColorStop").setAttribute("stop-color", color);
     }
 
