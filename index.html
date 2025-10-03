@@ -39,7 +39,7 @@
       font-family: monospace;
       padding: 5px;
     }
-    .arrow-group { display: flex; flex-wrap: wrap; justify-content: center; width: 120px; margin: 5px auto; }
+    .arrow-group { display: none; flex-wrap: wrap; justify-content: center; width: 120px; margin: 5px auto; }
     .control-row { display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
     .plusminus { display: flex; flex-direction: column; margin-left: 10px; }
     .bothone { display: flex; flex-direction: column; margin-left: 10px; }
@@ -73,7 +73,11 @@
 
     <div class="control-row">
       <span>Width:</span>
-      <div class="arrow-group">
+      <div class="bothone">
+        <button onclick="selectWidthBoth()">Both Sides</button>
+        <button onclick="selectWidthOne()">One Side</button>
+      </div>
+      <div class="arrow-group" id="width-arrows">
         <button>↖</button>
         <button>↑</button>
         <button>↗</button>
@@ -81,19 +85,19 @@
         <button>↓</button>
         <button>↘</button>
       </div>
-      <div class="plusminus">
+      <div class="plusminus" id="width-plusminus">
         <button>+</button>
         <button>-</button>
-      </div>
-      <div class="bothone">
-        <button>Both Sides</button>
-        <button>One Side</button>
       </div>
     </div>
 
     <div class="control-row">
       <span>Height:</span>
-      <div class="arrow-group">
+      <div class="bothone">
+        <button onclick="selectHeightBoth()">Both Sides</button>
+        <button onclick="selectHeightOne()">One Side</button>
+      </div>
+      <div class="arrow-group" id="height-arrows">
         <button>↖</button>
         <button>↑</button>
         <button>↗</button>
@@ -101,13 +105,9 @@
         <button>↓</button>
         <button>↘</button>
       </div>
-      <div class="plusminus">
+      <div class="plusminus" id="height-plusminus">
         <button>+</button>
         <button>-</button>
-      </div>
-      <div class="bothone">
-        <button>Both Sides</button>
-        <button>One Side</button>
       </div>
     </div>
   </div>
@@ -123,7 +123,7 @@
     ];
 
     let masterLight = null;
-    let lightType = null; // "circle" or "triangle"
+    let lightType = null;
     let cx = 125, cy = 125;
     let rx = 75, ry = 75;
     let triangleSize = 100;
@@ -180,6 +180,26 @@
         triangleSize = Math.max(10, triangleSize + dr);
         updateTrianglePoints();
       }
+    }
+
+    function selectWidthBoth() {
+      document.getElementById("width-arrows").style.display = "none";
+      document.getElementById("width-plusminus").style.display = "flex";
+    }
+
+    function selectWidthOne() {
+      document.getElementById("width-arrows").style.display = "flex";
+      document.getElementById("width-plusminus").style.display = "flex";
+    }
+
+    function selectHeightBoth() {
+      document.getElementById("height-arrows").style.display = "none";
+      document.getElementById("height-plusminus").style.display = "flex";
+    }
+
+    function selectHeightOne() {
+      document.getElementById("height-arrows").style.display = "flex";
+      document.getElementById("height-plusminus").style.display = "flex";
     }
 
     function maskLight() {
