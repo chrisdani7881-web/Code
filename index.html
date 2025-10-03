@@ -1,229 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Master Light with Mask</title>
-  <style>
-    body {
-      background: black;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-      color: white;
-      font-family: sans-serif;
-    }
-    svg {
-      border: 1px solid #555;
-      background: black;
-    }
-    .controls { margin-top: 10px; text-align: center; }
-    button {
-      margin: 2px;
-      padding: 5px 10px;
-      background: #222;
-      color: white;
-      border: 1px solid #555;
-      cursor: pointer;
-    }
-    button:hover { background: #444; }
-    textarea {
-      width: 400px;
-      height: 60px;
-      margin-top: 5px;
-      background: #111;
-      color: #fff;
-      border: 1px solid #555;
-      font-family: monospace;
-      padding: 5px;
-    }
-    .arrow-group { display: none; flex-wrap: wrap; justify-content: center; width: 120px; margin: 5px auto; }
-    .control-row { display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
-    .plusminus { display: flex; flex-direction: column; margin-left: 10px; }
-    .bothone { display: flex; flex-direction: column; margin-left: 10px; }
-    .diagonal { display: none; flex-direction: column; margin-left: 10px; }
-  </style>
+<meta charset="UTF-8">
+<title>Copy Full Light Editor</title>
+</head>
+<body style="background:black; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh;">
+
+<h2>Copy Full Light Editor Code</h2>
+<button onclick="copyFullCode()">Copy Full Code</button>
+
+<textarea id="fullCode" style="display:none;">
+<!-- Paste your entire light editor HTML, CSS, and JS here -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Master Light Editor</title>
+<style>
+body{background:black;color:white;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;}
+svg{border:1px solid #555;background:black;}
+.controls{margin-top:10px;text-align:center;}
+button{margin:2px;padding:5px 10px;background:#222;color:white;border:1px solid #555;cursor:pointer;}
+button:hover{background:#444;}
+.arrow-group,.plusminus,.diagonal{display:none;flex-wrap:wrap;justify-content:center;margin:5px auto;}
+.control-row{display:flex;align-items:center;justify-content:center;margin-bottom:10px;}
+.bothone{display:flex;flex-direction:column;margin-left:10px;}
+</style>
 </head>
 <body>
-  <svg id="canvas" width="400" height="400">
-    <defs>
-      <radialGradient id="lightGradient" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="white" stop-opacity="1" />
-        <stop offset="100%" stop-color="black" stop-opacity="0" />
-      </radialGradient>
-      <clipPath id="shapeClip1"><rect id="shape1" x="50" y="50" width="150" height="150" /></clipPath>
-      <clipPath id="shapeClip2"><rect id="shape2" x="200" y="200" width="150" height="150" /></clipPath>
-    </defs>
+<!-- Full light editor code goes here -->
+</body>
+</html>
+</textarea>
 
-    <rect x="50" y="50" width="150" height="150" fill="blue" data-layer="1" />
-    <rect x="200" y="200" width="150" height="150" fill="red" data-layer="2" />
-  </svg>
+<script>
+function copyFullCode(){
+  const code=document.getElementById('fullCode');
+  code.style.display='block';
+  code.select();
+  document.execCommand('copy');
+  code.style.display='none';
+  alert('Full editor code copied!');
+}
+</script>
 
-  <div class="controls">
-    <button onclick="addCircleLight()">Add Circle Light</button>
-    <button onclick="addTriangleLight()">Add Triangle Light</button>
-    <button onclick="maskLight()">Mask Light</button><br>
-    <button onclick="moveLight(0, -10)">Up</button><br>
-    <button onclick="moveLight(-10, 0)">Left</button>
-    <button onclick="moveLight(10, 0)">Right</button><br>
-    <button onclick="moveLight(0, 10)">Down</button><br>
-    <button onclick="resizeLight(10)">Increase</button>
-    <button onclick="resizeLight(-10)">Decrease</button><br><br>
-
-    <div class="control-row">
-      <span>Width:</span>
-      <div class="bothone">
-        <button onclick="selectWidthBoth()">Both Sides</button>
-        <button onclick="selectWidthOne()">One Side</button>
-      </div>
-      <div class="arrow-group" id="width-arrows">
-        <button>↖</button>
-        <button>↑</button>
-        <button>↗</button>
-        <button>↙</button>
-        <button>↓</button>
-        <button>↘</button>
-      </div>
-      <div class="plusminus" id="width-plusminus">
-        <button>+</button>
-        <button>-</button>
-      </div>
-      <div class="diagonal" id="width-diagonal">
-        <button>Diagonal ↘</button>
-        <button>Diagonal ↙</button>
-      </div>
-    </div>
-
-    <div class="control-row">
-      <span>Height:</span>
-      <div class="bothone">
-        <button onclick="selectHeightBoth()">Both Sides</button>
-        <button onclick="selectHeightOne()">One Side</button>
-      </div>
-      <div class="arrow-group" id="height-arrows">
-        <button>↖</button>
-        <button>↑</button>
-        <button>↗</button>
-        <button>↙</button>
-        <button>↓</button>
-        <button>↘</button>
-      </div>
-      <div class="plusminus" id="height-plusminus">
-        <button>+</button>
-        <button>-</button>
-      </div>
-      <div class="diagonal" id="height-diagonal">
-        <button>Diagonal ↘</button>
-        <button>Diagonal ↙</button>
-      </div>
-    </div>
-  </div>
-
-  <textarea id="shapeCode1">&lt;rect x="50" y="50" width="150" height="150" fill="blue" /&gt;</textarea>
-  <textarea id="shapeCode2">&lt;rect x="200" y="200" width="150" height="150" fill="red" /&gt;</textarea>
-
-  <script>
-    const canvas = document.getElementById("canvas");
-    const codeAreas = [
-      document.getElementById("shapeCode1"),
-      document.getElementById("shapeCode2")
-    ];
-
-    let masterLight = null;
-    let lightType = null;
-    let cx = 125, cy = 125;
-    let rx = 75, ry = 75;
-    let triangleSize = 100;
-
-    function addCircleLight() {
-      if (masterLight) return;
-      lightType = "circle";
-      masterLight = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
-      masterLight.setAttribute("id", "masterLight");
-      masterLight.setAttribute("cx", cx);
-      masterLight.setAttribute("cy", cy);
-      masterLight.setAttribute("rx", rx);
-      masterLight.setAttribute("ry", ry);
-      masterLight.setAttribute("fill", "url(#lightGradient)");
-      canvas.appendChild(masterLight);
-    }
-
-    function addTriangleLight() {
-      if (masterLight) return;
-      lightType = "triangle";
-      masterLight = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      masterLight.setAttribute("id", "masterLight");
-      updateTrianglePoints();
-      masterLight.setAttribute("fill", "url(#lightGradient)");
-      canvas.appendChild(masterLight);
-    }
-
-    function updateTrianglePoints() {
-      const halfBase = triangleSize / 2;
-      const points = `${cx - halfBase},${cy} ${cx + halfBase},${cy} ${cx},${cy + triangleSize}`;
-      masterLight.setAttribute("points", points);
-    }
-
-    function moveLight(dx, dy) {
-      if (!masterLight) return;
-      cx += dx;
-      cy += dy;
-      if (lightType === "circle") {
-        masterLight.setAttribute("cx", cx);
-        masterLight.setAttribute("cy", cy);
-      } else if (lightType === "triangle") {
-        updateTrianglePoints();
-      }
-    }
-
-    function resizeLight(dr) {
-      if (!masterLight) return;
-      if (lightType === "circle") {
-        rx = Math.max(10, rx + dr);
-        ry = Math.max(10, ry + dr);
-        masterLight.setAttribute("rx", rx);
-        masterLight.setAttribute("ry", ry);
-      } else if (lightType === "triangle") {
-        triangleSize = Math.max(10, triangleSize + dr);
-        updateTrianglePoints();
-      }
-    }
-
-    function selectWidthBoth() {
-      document.getElementById("width-arrows").style.display = "none";
-      document.getElementById("width-plusminus").style.display = "flex";
-      document.getElementById("width-diagonal").style.display = "flex";
-    }
-
-    function selectWidthOne() {
-      document.getElementById("width-arrows").style.display = "flex";
-      document.getElementById("width-plusminus").style.display = "flex";
-      document.getElementById("width-diagonal").style.display = "none";
-    }
-
-    function selectHeightBoth() {
-      document.getElementById("height-arrows").style.display = "none";
-      document.getElementById("height-plusminus").style.display = "flex";
-      document.getElementById("height-diagonal").style.display = "flex";
-    }
-
-    function selectHeightOne() {
-      document.getElementById("height-arrows").style.display = "flex";
-      document.getElementById("height-plusminus").style.display = "flex";
-      document.getElementById("height-diagonal").style.display = "none";
-    }
-
-    function maskLight() {
-      if (!masterLight) return;
-      const shapes = canvas.querySelectorAll('rect[data-layer]');
-      shapes.forEach((shape, index) => {
-        const light = masterLight.cloneNode(true);
-        light.removeAttribute("id");
-        light.setAttribute("clip-path", `url(#shapeClip${index+1})`);
-        canvas.appendChild(light);
-        if (lightType === "circle") {
-          codeAreas[index].value += `\n<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#lightGradient)" clip-path="url(#shapeClip${index+1})" />`;
-        } else if (lightType === "triangle") {
-          codeAreas[index].value += `\
+</body>
+</html>
