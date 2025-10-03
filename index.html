@@ -43,13 +43,14 @@
     .control-row { display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
     .plusminus { display: flex; flex-direction: column; margin-left: 10px; }
     .bothone { display: flex; flex-direction: column; margin-left: 10px; }
+    input[type="range"] { width: 200px; }
   </style>
 </head>
 <body>
   <svg id="canvas" width="400" height="400">
     <defs>
       <radialGradient id="lightGradient" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="white" stop-opacity="1" />
+        <stop id="lightColorStop" offset="0%" stop-color="white" stop-opacity="1" />
         <stop offset="100%" stop-color="black" stop-opacity="0" />
       </radialGradient>
       <clipPath id="shapeClip1"><rect id="shape1" x="50" y="50" width="150" height="150" /></clipPath>
@@ -110,6 +111,11 @@
         <button onclick="adjustLightHeight(-10)">-</button>
       </div>
     </div>
+
+    <div class="control-row">
+      <span>Color Temp:</span>
+      <input type="range" id="colorTemp" min="1000" max="10000" step="100" value="5500" oninput="updateLightColor(this.value)">
+    </div>
   </div>
 
   <textarea id="shapeCode1">&lt;rect x="50" y="50" width="150" height="150" fill="blue" /&gt;</textarea>
@@ -127,6 +133,27 @@
     let cx = 125, cy = 125;
     let rx = 75, ry = 75;
     let triangleSize = 100;
+
+    function kelvinToRGB(temp) {
+      let r, g, b;
+      temp = temp / 100;
+
+      if (temp <= 66) {
+        r = 255;
+        g = Math.min(255, Math.max(0, 99.47 * Math.log(temp) - 161.12));
+        b = temp <= 19 ? 0 : Math.min(255, Math.max(0, 138.52 * Math.log(temp - 10) - 305.04));
+      } else {
+        r = Math.min(255, Math.max(0, 329.70 * Math.pow(temp - 60, -0.1332)));
+        g = Math.min(255, Math.max(0, 288.12 * Math.pow(temp - 60, -0.0755)));
+        b = 255;
+      }
+      return `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
+    }
+
+    function updateLightColor(temp) {
+      const color = kelvinToRGB(temp);
+      document.getElementById("lightColorStop").setAttribute("stop-color", color);
+    }
 
     function addCircleLight() {
       if (masterLight) return;
