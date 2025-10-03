@@ -58,7 +58,8 @@
   </svg>
 
   <div class="controls">
-    <button onclick="addLight()">Add Light</button>
+    <button onclick="addCircleLight()">Add Circle Light</button>
+    <button onclick="addTriangleLight()">Add Triangle Light</button>
     <button onclick="maskLight()">Mask Light</button><br>
     <button onclick="moveLight(0, -10)">Up</button><br>
     <button onclick="moveLight(-10, 0)">Left</button>
@@ -66,11 +67,9 @@
     <button onclick="moveLight(0, 10)">Down</button><br>
     <button onclick="resizeLight(10)">Increase</button>
     <button onclick="resizeLight(-10)">Decrease</button><br><br>
-
     <span>Width:</span>
     <button onclick="adjustLightWidth(5)">+</button>
     <button onclick="adjustLightWidth(-5)">-</button>
-
     <span>Height:</span>
     <button onclick="adjustLightHeight(5)">+</button>
     <button onclick="adjustLightHeight(-5)">-</button>
@@ -87,11 +86,14 @@
     ];
 
     let masterLight = null;
+    let lightType = null; // "circle" or "triangle"
     let cx = 125, cy = 125;
     let rx = 75, ry = 75;
+    let triangleSize = 100;
 
-    function addLight() {
+    function addCircleLight() {
       if (masterLight) return;
+      lightType = "circle";
       masterLight = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
       masterLight.setAttribute("id", "masterLight");
       masterLight.setAttribute("cx", cx);
@@ -102,32 +104,68 @@
       canvas.appendChild(masterLight);
     }
 
+    function addTriangleLight() {
+      if (masterLight) return;
+      lightType = "triangle";
+      masterLight = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      masterLight.setAttribute("id", "masterLight");
+      updateTrianglePoints();
+      masterLight.setAttribute("fill", "url(#lightGradient)");
+      canvas.appendChild(masterLight);
+    }
+
+    function updateTrianglePoints() {
+      const halfBase = triangleSize / 2;
+      // Triangle pointing down by default
+      const points = `${cx - halfBase},${cy} ${cx + halfBase},${cy} ${cx},${cy + triangleSize}`;
+      masterLight.setAttribute("points", points);
+    }
+
     function moveLight(dx, dy) {
       if (!masterLight) return;
       cx += dx;
       cy += dy;
-      masterLight.setAttribute("cx", cx);
-      masterLight.setAttribute("cy", cy);
+      if (lightType === "circle") {
+        masterLight.setAttribute("cx", cx);
+        masterLight.setAttribute("cy", cy);
+      } else if (lightType === "triangle") {
+        updateTrianglePoints();
+      }
     }
 
     function resizeLight(dr) {
       if (!masterLight) return;
-      rx = Math.max(10, rx + dr);
-      ry = Math.max(10, ry + dr);
-      masterLight.setAttribute("rx", rx);
-      masterLight.setAttribute("ry", ry);
+      if (lightType === "circle") {
+        rx = Math.max(10, rx + dr);
+        ry = Math.max(10, ry + dr);
+        masterLight.setAttribute("rx", rx);
+        masterLight.setAttribute("ry", ry);
+      } else if (lightType === "triangle") {
+        triangleSize = Math.max(10, triangleSize + dr);
+        updateTrianglePoints();
+      }
     }
 
     function adjustLightWidth(dr) {
       if (!masterLight) return;
-      rx = Math.max(10, rx + dr);
-      masterLight.setAttribute("rx", rx);
+      if (lightType === "circle") {
+        rx = Math.max(10, rx + dr);
+        masterLight.setAttribute("rx", rx);
+      } else if (lightType === "triangle") {
+        triangleSize = Math.max(10, triangleSize + dr);
+        updateTrianglePoints();
+      }
     }
 
     function adjustLightHeight(dr) {
       if (!masterLight) return;
-      ry = Math.max(10, ry + dr);
-      masterLight.setAttribute("ry", ry);
+      if (lightType === "circle") {
+        ry = Math.max(10, ry + dr);
+        masterLight.setAttribute("ry", ry);
+      } else if (lightType === "triangle") {
+        triangleSize = Math.max(10, triangleSize + dr);
+        updateTrianglePoints();
+      }
     }
 
     function maskLight() {
@@ -141,11 +179,16 @@
         light.setAttribute("clip-path", `url(#shapeClip${index+1})`);
         canvas.appendChild(light);
 
-        codeAreas[index].value += `\n<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#lightGradient)" clip-path="url(#shapeClip${index+1})" />`;
+        if (lightType === "circle") {
+          codeAreas[index].value += `\n<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#lightGradient)" clip-path="url(#shapeClip${index+1})" />`;
+        } else if (lightType === "triangle") {
+          codeAreas[index].value += `\n<polygon points="${masterLight.getAttribute("points")}" fill="url(#lightGradient)" clip-path="url(#shapeClip${index+1})" />`;
+        }
       });
 
       masterLight.remove();
       masterLight = null;
+      lightType = null;
     }
   </script>
 </body>
