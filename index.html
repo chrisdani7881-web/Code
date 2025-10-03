@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Master Light with True Brightness Control</title>
+  <title>Master Light with Real Brightness</title>
   <style>
     body {
       background: black;
@@ -47,15 +47,20 @@
 <body>
   <svg id="canvas" width="400" height="400">
     <defs>
-      <!-- Smooth gradient -->
+      <!-- Base gradient -->
       <radialGradient id="lightGradient" cx="50%" cy="50%" r="50%">
         <stop offset="0%" stop-color="white" stop-opacity="1" />
         <stop offset="100%" stop-color="white" stop-opacity="0" />
       </radialGradient>
 
-      <!-- Blur filter for softness -->
-      <filter id="softBlur" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="25" />
+      <!-- Brightness filter (with blur inside) -->
+      <filter id="brightFilter" x="-50%" y="-50%" width="200%" height="200%">
+        <feComponentTransfer>
+          <feFuncR id="funcR" type="linear" slope="1" />
+          <feFuncG id="funcG" type="linear" slope="1" />
+          <feFuncB id="funcB" type="linear" slope="1" />
+        </feComponentTransfer>
+        <feGaussianBlur stdDeviation="25" />
       </filter>
 
       <clipPath id="shapeClip1"><rect id="shape1" x="50" y="50" width="150" height="150" /></clipPath>
@@ -104,8 +109,7 @@
       masterLight.setAttribute("rx", rx);
       masterLight.setAttribute("ry", ry);
       masterLight.setAttribute("fill", "url(#lightGradient)");
-      masterLight.setAttribute("filter", "url(#softBlur)");
-      masterLight.setAttribute("opacity", "1");
+      masterLight.setAttribute("filter", "url(#brightFilter)");
       canvas.appendChild(masterLight);
     }
 
@@ -126,11 +130,10 @@
     }
 
     function adjustBrightness(value) {
-      // Map slider 0–200 to opacity 0–2
-      const opacity = value / 100;
-      if (masterLight) {
-        masterLight.setAttribute("opacity", opacity);
-      }
+      const slope = value / 100; // 1 = normal, <1 dim, >1 brighter
+      document.getElementById("funcR").setAttribute("slope", slope);
+      document.getElementById("funcG").setAttribute("slope", slope);
+      document.getElementById("funcB").setAttribute("slope", slope);
     }
 
     function maskLight() {
@@ -141,7 +144,7 @@
         light.removeAttribute("id");
         light.setAttribute("clip-path", `url(#shapeClip${index+1})`);
         canvas.appendChild(light);
-        codeAreas[index].value += `\n<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#lightGradient)" filter="url(#softBlur)" opacity="${masterLight.getAttribute("opacity")}" clip-path="url(#shapeClip${index+1})" />`;
+        codeAreas[index].value += `\n<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#lightGradient)" filter="url(#brightFilter)" />`;
       });
       masterLight.remove();
       masterLight = null;
