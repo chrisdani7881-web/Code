@@ -39,7 +39,6 @@
       font-family: monospace;
       padding: 5px;
     }
-    input { width: 50px; }
   </style>
 </head>
 <body>
@@ -66,13 +65,15 @@
     <button onclick="moveLight(10, 0)">Right</button><br>
     <button onclick="moveLight(0, 10)">Down</button><br>
     <button onclick="resizeLight(10)">Increase</button>
-    <button onclick="resizeLight(-10)">Decrease</button>
-    <button onclick="adjustLightShape()">Adjust Light Shape</button>
-  </div>
+    <button onclick="resizeLight(-10)">Decrease</button><br><br>
 
-  <div>
-    Width: <input type="number" id="lightWidth" value="75">
-    Height: <input type="number" id="lightHeight" value="75">
+    <span>Width:</span>
+    <button onclick="adjustLightWidth(5)">+</button>
+    <button onclick="adjustLightWidth(-5)">-</button>
+
+    <span>Height:</span>
+    <button onclick="adjustLightHeight(5)">+</button>
+    <button onclick="adjustLightHeight(-5)">-</button>
   </div>
 
   <textarea id="shapeCode1">&lt;rect x="50" y="50" width="150" height="150" fill="blue" /&gt;</textarea>
@@ -87,7 +88,6 @@
 
     let masterLight = null;
     let cx = 125, cy = 125;
-    let r = 75;
     let rx = 75, ry = 75;
 
     function addLight() {
@@ -118,13 +118,15 @@
       masterLight.setAttribute("ry", ry);
     }
 
-    function adjustLightShape() {
+    function adjustLightWidth(dr) {
       if (!masterLight) return;
-      const newWidth = parseInt(document.getElementById("lightWidth").value);
-      const newHeight = parseInt(document.getElementById("lightHeight").value);
-      rx = Math.max(10, newWidth);
-      ry = Math.max(10, newHeight);
+      rx = Math.max(10, rx + dr);
       masterLight.setAttribute("rx", rx);
+    }
+
+    function adjustLightHeight(dr) {
+      if (!masterLight) return;
+      ry = Math.max(10, ry + dr);
       masterLight.setAttribute("ry", ry);
     }
 
