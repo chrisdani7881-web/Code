@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Master Light with Mask (Smooth Glow)</title>
+  <title>Master Light with Smooth Center</title>
   <style>
     body {
       background: black;
@@ -44,10 +44,12 @@
 <body>
   <svg id="canvas" width="400" height="400">
     <defs>
-      <!-- Smooth white-to-transparent gradient (no dark halo) -->
+      <!-- Multi-stop gradient for smoother falloff -->
       <radialGradient id="lightGradient" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="white" stop-opacity="1" />
-        <stop offset="50%" stop-color="white" stop-opacity="0.4" />
+        <stop offset="0%"   stop-color="white" stop-opacity="1" />
+        <stop offset="20%"  stop-color="white" stop-opacity="0.8" />
+        <stop offset="40%"  stop-color="white" stop-opacity="0.5" />
+        <stop offset="70%"  stop-color="white" stop-opacity="0.2" />
         <stop offset="100%" stop-color="white" stop-opacity="0" />
       </radialGradient>
 
