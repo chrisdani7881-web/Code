@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Master Light with Smooth Center</title>
+  <title>Master Light with Soft Blur</title>
   <style>
     body {
       background: black;
@@ -44,14 +44,16 @@
 <body>
   <svg id="canvas" width="400" height="400">
     <defs>
-      <!-- Multi-stop gradient for smoother falloff -->
+      <!-- Smooth gradient -->
       <radialGradient id="lightGradient" cx="50%" cy="50%" r="50%">
-        <stop offset="0%"   stop-color="white" stop-opacity="1" />
-        <stop offset="20%"  stop-color="white" stop-opacity="0.8" />
-        <stop offset="40%"  stop-color="white" stop-opacity="0.5" />
-        <stop offset="70%"  stop-color="white" stop-opacity="0.2" />
+        <stop offset="0%" stop-color="white" stop-opacity="1" />
         <stop offset="100%" stop-color="white" stop-opacity="0" />
       </radialGradient>
+
+      <!-- Blur filter for softness -->
+      <filter id="softBlur" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="25" />
+      </filter>
 
       <clipPath id="shapeClip1"><rect id="shape1" x="50" y="50" width="150" height="150" /></clipPath>
       <clipPath id="shapeClip2"><rect id="shape2" x="200" y="200" width="150" height="150" /></clipPath>
@@ -99,6 +101,7 @@
       masterLight.setAttribute("rx", rx);
       masterLight.setAttribute("ry", ry);
       masterLight.setAttribute("fill", "url(#lightGradient)");
+      masterLight.setAttribute("filter", "url(#softBlur)");
       canvas.appendChild(masterLight);
     }
 
@@ -109,6 +112,7 @@
       masterLight.setAttribute("id", "masterLight");
       updateTrianglePoints();
       masterLight.setAttribute("fill", "url(#lightGradient)");
+      masterLight.setAttribute("filter", "url(#softBlur)");
       canvas.appendChild(masterLight);
     }
 
@@ -152,9 +156,9 @@
         light.setAttribute("clip-path", `url(#shapeClip${index+1})`);
         canvas.appendChild(light);
         if (lightType === "circle") {
-          codeAreas[index].value += `\n<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#lightGradient)" clip-path="url(#shapeClip${index+1})" />`;
+          codeAreas[index].value += `\n<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#lightGradient)" filter="url(#softBlur)" clip-path="url(#shapeClip${index+1})" />`;
         } else if (lightType === "triangle") {
-          codeAreas[index].value += `\n<polygon points="${masterLight.getAttribute("points")}" fill="url(#lightGradient)" clip-path="url(#shapeClip${index+1})" />`;
+          codeAreas[index].value += `\n<polygon points="${masterLight.getAttribute("points")}" fill="url(#lightGradient)" filter="url(#softBlur)" clip-path="url(#shapeClip${index+1})" />`;
         }
       });
       masterLight.remove();
