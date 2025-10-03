@@ -19,7 +19,7 @@
       border: 1px solid #555;
       background: black;
     }
-    .controls { margin-top: 10px; }
+    .controls { margin-top: 10px; text-align: center; }
     button {
       margin: 2px;
       padding: 5px 10px;
@@ -39,7 +39,7 @@
       font-family: monospace;
       padding: 5px;
     }
-    .group { margin: 5px 0; }
+    .arrow-group { margin: 5px 0; }
   </style>
 </head>
 <body>
@@ -53,7 +53,6 @@
       <clipPath id="shapeClip2"><rect id="shape2" x="200" y="200" width="150" height="150" /></clipPath>
     </defs>
 
-    <!-- Visible shapes -->
     <rect x="50" y="50" width="150" height="150" fill="blue" data-layer="1" />
     <rect x="200" y="200" width="150" height="150" fill="red" data-layer="2" />
   </svg>
@@ -69,24 +68,26 @@
     <button onclick="resizeLight(10)">Increase</button>
     <button onclick="resizeLight(-10)">Decrease</button><br><br>
 
-    <div class="group">
+    <!-- Width controls -->
+    <div class="arrow-group">
       <span>Width:</span><br>
-      <button onclick="adjustLightSide('left', -5)">←</button>
-      <button onclick="adjustLightSide('right', 5)">→</button>
-      <button onclick="adjustLightSide('both', 5)">+</button>
-      <button onclick="adjustLightSide('both', -5)">-</button>
-      <button onclick="adjustLightSide('diagLeft', 5)">↖</button>
-      <button onclick="adjustLightSide('diagRight', 5)">↗</button>
+      <button onclick="adjustLightWidthSide('left',5)">←</button>
+      <button onclick="adjustLightWidthSide('right',5)">→</button>
+      <button onclick="adjustLightWidthSide('both',5)">↔</button>
+      <button onclick="adjustLightWidthSide('diag1',5)">⤡</button>
+      <button onclick="adjustLightWidthSide('diag2',5)">⤢</button>
+      <button onclick="adjustLightWidthSide('reset',0)">Reset</button>
     </div>
 
-    <div class="group">
+    <!-- Height controls -->
+    <div class="arrow-group">
       <span>Height:</span><br>
-      <button onclick="adjustLightSide('top', -5)">↑</button>
-      <button onclick="adjustLightSide('bottom', 5)">↓</button>
-      <button onclick="adjustLightSide('bothH', 5)">+</button>
-      <button onclick="adjustLightSide('bothH', -5)">-</button>
-      <button onclick="adjustLightSide('diagTop', 5)">↖</button>
-      <button onclick="adjustLightSide('diagBottom', 5)">↘</button>
+      <button onclick="adjustLightHeightSide('top',5)">↑</button>
+      <button onclick="adjustLightHeightSide('bottom',5)">↓</button>
+      <button onclick="adjustLightHeightSide('both',5)">↕</button>
+      <button onclick="adjustLightHeightSide('diag1',5)">⤡</button>
+      <button onclick="adjustLightHeightSide('diag2',5)">⤢</button>
+      <button onclick="adjustLightHeightSide('reset',0)">Reset</button>
     </div>
   </div>
 
@@ -95,13 +96,10 @@
 
   <script>
     const canvas = document.getElementById("canvas");
-    const codeAreas = [
-      document.getElementById("shapeCode1"),
-      document.getElementById("shapeCode2")
-    ];
+    const codeAreas = [document.getElementById("shapeCode1"), document.getElementById("shapeCode2")];
 
     let masterLight = null;
-    let lightType = null; // "circle" or "triangle"
+    let lightType = null;
     let cx = 125, cy = 125;
     let rx = 75, ry = 75;
     let triangleSize = 100;
@@ -137,8 +135,7 @@
 
     function moveLight(dx, dy) {
       if (!masterLight) return;
-      cx += dx;
-      cy += dy;
+      cx += dx; cy += dy;
       if (lightType === "circle") {
         masterLight.setAttribute("cx", cx);
         masterLight.setAttribute("cy", cy);
@@ -160,70 +157,30 @@
       }
     }
 
-    function adjustLightSide(side, amount) {
+    function adjustLightWidthSide(side, amount) {
       if (!masterLight || lightType !== "circle") return;
-
-      switch (side) {
-        case "left":
-          rx = Math.max(10, rx + amount);
-          cx -= amount / 2;
-          break;
-        case "right":
-          rx = Math.max(10, rx + amount);
-          cx += amount / 2;
-          break;
-        case "both":
-          rx = Math.max(10, rx + amount);
-          break;
-        case "top":
-          ry = Math.max(10, ry + amount);
-          cy -= amount / 2;
-          break;
-        case "bottom":
-          ry = Math.max(10, ry + amount);
-          cy += amount / 2;
-          break;
-        case "bothH":
-          ry = Math.max(10, ry + amount);
-          break;
-        case "diagLeft":
-          rx = Math.max(10, rx + amount);
-          ry = Math.max(10, ry + amount);
-          cx -= amount / 2;
-          cy -= amount / 2;
-          break;
-        case "diagRight":
-          rx = Math.max(10, rx + amount);
-          ry = Math.max(10, ry + amount);
-          cx += amount / 2;
-          cy -= amount / 2;
-          break;
-        case "diagTop":
-          rx = Math.max(10, rx + amount);
-          ry = Math.max(10, ry + amount);
-          cy -= amount / 2;
-          break;
-        case "diagBottom":
-          rx = Math.max(10, rx + amount);
-          ry = Math.max(10, ry + amount);
-          cy += amount / 2;
-          break;
+      if (side === 'left' || side === 'right' || side === 'both') {
+        rx = Math.max(10, rx + amount);
       }
-
-      masterLight.setAttribute("cx", cx);
-      masterLight.setAttribute("cy", cy);
+      if (side === 'reset') rx = 75;
       masterLight.setAttribute("rx", rx);
+    }
+
+    function adjustLightHeightSide(side, amount) {
+      if (!masterLight || lightType !== "circle") return;
+      if (side === 'top' || side === 'bottom' || side === 'both') {
+        ry = Math.max(10, ry + amount);
+      }
+      if (side === 'reset') ry = 75;
       masterLight.setAttribute("ry", ry);
     }
 
     function maskLight() {
       if (!masterLight) return;
-
       const shapes = canvas.querySelectorAll('rect[data-layer]');
       shapes.forEach((shape, index) => {
         const light = masterLight.cloneNode(true);
         light.removeAttribute("id");
-
         light.setAttribute("clip-path", `url(#shapeClip${index+1})`);
         canvas.appendChild(light);
 
@@ -233,10 +190,7 @@
           codeAreas[index].value += `\n<polygon points="${masterLight.getAttribute("points")}" fill="url(#lightGradient)" clip-path="url(#shapeClip${index+1})" />`;
         }
       });
-
-      masterLight.remove();
-      masterLight = null;
-      lightType = null;
+      masterLight.remove(); masterLight = null; lightType = null;
     }
   </script>
 </body>
