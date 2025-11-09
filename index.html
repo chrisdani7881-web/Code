@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Stackable Circle Lights</title>
+  <title>Master Light with White-Level Brightness</title>
   <style>
     body {
       background: black;
@@ -20,7 +20,7 @@
       background: black;
     }
     .controls { margin-top: 10px; text-align: center; }
-    button {
+    button, input[type=range] {
       margin: 5px;
       padding: 5px 10px;
       background: #222;
@@ -29,6 +29,9 @@
       cursor: pointer;
     }
     button:hover { background: #444; }
+    input[type=range] {
+      width: 200px;
+    }
     textarea {
       width: 400px;
       height: 60px;
@@ -44,15 +47,19 @@
 <body>
   <svg id="canvas" width="400" height="400">
     <defs>
-      <!-- Soft gradient for each light -->
+      <!-- Base gradient -->
       <radialGradient id="lightGradient" cx="50%" cy="50%" r="50%">
         <stop offset="0%" stop-color="white" stop-opacity="1" />
-        <stop offset="70%" stop-color="white" stop-opacity="0.4" />
         <stop offset="100%" stop-color="white" stop-opacity="0" />
       </radialGradient>
 
-      <!-- Extra softness -->
-      <filter id="softBlur" x="-50%" y="-50%" width="200%" height="200%">
+      <!-- Brightness filter: white scaling + blur -->
+      <filter id="brightFilter" x="-50%" y="-50%" width="200%" height="200%">
+        <feColorMatrix id="brightnessMatrix" type="matrix" 
+          values="1 0 0 0 0
+                  0 1 0 0 0
+                  0 0 1 0 0
+                  0 0 0 1 0" />
         <feGaussianBlur stdDeviation="25" />
       </filter>
 
@@ -73,6 +80,10 @@
     <button onclick="moveLight(0, 10)">Down</button><br>
     <button onclick="resizeLight(10)">Increase</button>
     <button onclick="resizeLight(-10)">Decrease</button><br><br>
+
+    <!-- Brightness control -->
+    <label for="brightness">Brightness:</label><br>
+    <input type="range" id="brightness" min="50" max="300" value="100" oninput="adjustBrightness(this.value)">
   </div>
 
   <textarea id="shapeCode1">&lt;rect x="50" y="50" width="150" height="150" fill="blue" /&gt;</textarea>
@@ -85,46 +96,60 @@
       document.getElementById("shapeCode2")
     ];
 
-    let currentLight = null; 
+    let masterLight = null;
     let cx = 125, cy = 125;
     let rx = 75, ry = 75;
 
     function addCircleLight() {
-      currentLight = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
-      currentLight.setAttribute("cx", cx);
-      currentLight.setAttribute("cy", cy);
-      currentLight.setAttribute("rx", rx);
-      currentLight.setAttribute("ry", ry);
-      currentLight.setAttribute("fill", "url(#lightGradient)");
-      currentLight.setAttribute("filter", "url(#softBlur)");
-      canvas.appendChild(currentLight);
+      if (masterLight) return;
+      masterLight = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
+      masterLight.setAttribute("id", "masterLight");
+      masterLight.setAttribute("cx", cx);
+      masterLight.setAttribute("cy", cy);
+      masterLight.setAttribute("rx", rx);
+      masterLight.setAttribute("ry", ry);
+      masterLight.setAttribute("fill", "url(#lightGradient)");
+      masterLight.setAttribute("filter", "url(#brightFilter)");
+      canvas.appendChild(masterLight);
     }
 
     function moveLight(dx, dy) {
-      if (!currentLight) return;
+      if (!masterLight) return;
       cx += dx;
       cy += dy;
-      currentLight.setAttribute("cx", cx);
-      currentLight.setAttribute("cy", cy);
+      masterLight.setAttribute("cx", cx);
+      masterLight.setAttribute("cy", cy);
     }
 
     function resizeLight(dr) {
-      if (!currentLight) return;
+      if (!masterLight) return;
       rx = Math.max(10, rx + dr);
       ry = Math.max(10, ry + dr);
-      currentLight.setAttribute("rx", rx);
-      currentLight.setAttribute("ry", ry);
+      masterLight.setAttribute("rx", rx);
+      masterLight.setAttribute("ry", ry);
+    }
+
+    function adjustBrightness(value) {
+      const scale = value / 100; // 1 = normal, >1 brighter, <1 dimmer
+      document.getElementById("brightnessMatrix").setAttribute("values", 
+        `${scale} 0 0 0 0
+         0 ${scale} 0 0 0
+         0 0 ${scale} 0 0
+         0 0 0 1 0`);
     }
 
     function maskLight() {
-      if (!currentLight) return;
+      if (!masterLight) return;
       const shapes = canvas.querySelectorAll('rect[data-layer]');
       shapes.forEach((shape, index) => {
-        const light = currentLight.cloneNode(true);
+        const light = masterLight.cloneNode(true);
+        light.removeAttribute("id");
         light.setAttribute("clip-path", `url(#shapeClip${index+1})`);
         canvas.appendChild(light);
-        codeAreas[index].value += `\n<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#lightGradient)" filter="url(#softBlur)" clip-path="url(#shapeClip${index+1})" />`;
+        codeAreas[index].value += `\n<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#lightGradient)" filter="url(#brightFilter)" />`;
       });
+      masterLight.remove();
+      masterLight = null;
     }
   </script>
 </body>
